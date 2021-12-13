@@ -22,7 +22,7 @@ def getListOfFiles(dirName):
     return allFiles
 
 files = getListOfFiles('infinity_engine/kotor1/xml/')
-#file = files
+#files = [list(files)[0]]
 for file in files:
     with open(file, 'rb') as f:
         xml_dict = xmltodict.parse(f)
@@ -35,21 +35,29 @@ for file in files:
         
         for elem in xml_dict['gff3']['struct']['list']:
             try:
+            
                 if elem['@label'] == 'EntryList':
                     entry_dict = elem['struct']
-            except TypeError:
-                print("FINDENTRYLIST:",elem)
-                for elem in entry_dict:
+                    for elem in entry_dict:
+                
                         try:
                             string_id = elem['locstring']['@strref']
                         except:
-                            pass
+                            print("Strref not found for", file)
+                            string_id = "not found"
                         try:
                             speaker = elem['exostring'][0]['#text']
                         except:
+                           # print("Speaker not found in", file)
                             speaker = 'empty'
-                        #print(string_id, speaker)
-                        #pprint(elem)
-                        #print()
-            # if elem['@label'] == 'ReplyList':
-                #   reply_dict = elem['struct']
+                        print(string_id, speaker)
+            except TypeError:
+                print("EntryList not found for",elem,"in", file)
+                
+            try:   #print()
+                if elem['@label'] == 'ReplyList':
+                    reply_dict = elem['struct']
+                    for elem in reply_dict:
+                        print("replylist goes here")
+            except :
+                print("ReplyList not found in ", file)
