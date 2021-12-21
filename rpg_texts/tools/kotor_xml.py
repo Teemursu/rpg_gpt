@@ -47,10 +47,13 @@ def update_idx(xml_dict, list_type, file):
                 string_id = entry['locstring']['@strref']
                 if string_id == '4294967295':
                     string_id = "EoC"
+            try:
                 df.at[entry_id, 'id'] = entry_id
                 df.at[entry_id, 'sid'] = string_id
                 df.at[entry_id, 'filename'] = file
                 id_sid_mapping[entry_id] = string_id
+            except UnboundLocalError:
+                pass
 
 def update_speakers(xml_dict, list_type):
     for entry in entry_dict:
@@ -118,7 +121,7 @@ nwn_files = getListOfFiles('infinity_engine/nwn/xml/')
 files = nwn_files
 #files = [list(files)[5]]
 for file in files:
-    df = pd.DataFrame(columns=[ 'file','id', 'sid', 'speaker', 'replies'])
+    df = pd.DataFrame(columns=['filename','id', 'sid', 'speaker', 'replies'])
     
     with open(file, 'rb') as f:
         xml = xmltodict.parse(f)
