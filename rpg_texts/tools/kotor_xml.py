@@ -25,7 +25,8 @@ def getListOfFiles(dirName):
             allFiles.append(fullPath)
                 
     return allFiles
-def update_idx(xml_dict, list_type):
+
+def update_idx(xml_dict, list_type, file):
     for entry in xml_dict:
         # TODO:
         try:
@@ -48,8 +49,9 @@ def update_idx(xml_dict, list_type):
                     string_id = "EoC"
                 df.at[entry_id, 'id'] = entry_id
                 df.at[entry_id, 'sid'] = string_id
-                
+                df.at[entry_id, 'filename'] = file
                 id_sid_mapping[entry_id] = string_id
+
 def update_speakers(xml_dict, list_type):
     for entry in entry_dict:
         try:
@@ -84,7 +86,7 @@ def update_replies(xml_dict, list_type):
                                 
                                 reply_id = elem['struct']['uint32']['#text']+"_reply"
                                 df.at[entry_id, 'replies'] = [id_sid_mapping[reply_id]]
-                                if elem["@label"] == 'EntriesList':
+                            if elem["@label"] == 'EntriesList':
                                     entry_id = entry['@id']+"_reply" 
                                     reply_id = elem['struct']['uint32']['#text']+"_entry"
                                     df.at[entry_id, 'replies'] = [id_sid_mapping[reply_id]]
@@ -107,58 +109,46 @@ def update_replies(xml_dict, list_type):
                                     df.at[entry_id, 'replies'] = replies
                             except KeyError:
                                 pass
-               
-                        
-                        '''
-                        for reply in elem['struct']:
-                            try:
-                                entry_id = reply['uint32']['#text']+"_entry"
-                            except TypeError:
-                                    print("entry id not found for", reply)
-                                    print()
-                                    return None
-                                    replies.append(id_sid_mapping[entry_id])
-                                    df.at[entry_id, 'replies'] = replies
-                                                                            
-                                    df.at[entry_id, 'replies'] = [id_sid_mapping[entry_id]]
-                                    replies = []
-                                    
+    
                     
-                    '''
-files = getListOfFiles('infinity_engine/kotor1/xml/')
+kotor1_files = getListOfFiles('infinity_engine/kotor1/xml/')
+kotor2_files = getListOfFiles('infinity_engine/kotor2/xml/')
+files = kotor1_files + kotor2_files
 #files = [list(files)[5]]
 for file in files:
-    df = pd.DataFrame(columns=['id', 'sid', 'speaker', 'replies'])
+    df = pd.DataFrame(columns=[ 'file','id', 'sid', 'speaker', 'replies'])
     
     with open(file, 'rb') as f:
         xml = xmltodict.parse(f)
         xml = json.dumps(xml)
         xml = json.loads(xml)
         xml_dict = xml['gff3']['struct']['list']
-        print(file)
+        print("Processing file:",file)
         for elem in xml_dict:
-    
+            try:
                 if elem['@label'] == 'EntryList' or elem['@label'] == 'ReplyList' or elem['@label'] == 'StartingList':
                     list_type = elem['@label']
                     try:
                         entry_dict = elem['struct']
                     except KeyError:
                         print("Error finding struct for",elem)
-                    update_idx(entry_dict, list_type)
+                    update_idx(entry_dict, list_type, file)
+            except TypeError:
+                pass
 
-            
-            
         for elem in xml_dict:
-
+            try:
                 if elem['@label'] == 'EntryList' or elem['@label'] == 'ReplyList' or elem['@label'] == 'StartingList':
                     list_type = elem['@label']
                     try:
                         entry_dict = elem['struct']
                     except KeyError:
                         print("Error finding struct for",elem)
-        
+
                     update_speakers(entry_dict, list_type)
                     update_replies(entry_dict, list_type)
+            except TypeError:
+                pass
 
         
         
@@ -166,9 +156,17 @@ for file in files:
     df['replies'] = [ [] if x is np.NaN else x for x in df['replies'] ]
     df['speaker'] = df['speaker'].fillna("PC")
     df = df[df.sid != 'EoC']
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(df.to_string(index=False))
+    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        #print(df.to_string(index=False))
+    #data = [df['sid'], df['speaker'],df['replies']]
+    #headers = ['sid', 'speaker', 'replies']
+    #df = pd.concat(data, axis=1, keys=headers, ignore_index=True)
+    print(df)
     dfs.append(df)
 
-#df = [df.set_index('sid') for df in dfs]
-#print(pd.concat(dfs, axis=1))
+df = [df.set_index('sid') for df in dfs]
+
+df = pd.concat(df, axis=0)
+
+filename = 'kotor_dataset.csv'
+df.to_csv(filename, encoding='utf-8')
