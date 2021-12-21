@@ -111,9 +111,11 @@ def update_replies(xml_dict, list_type):
                                 pass
     
                     
-kotor1_files = getListOfFiles('infinity_engine/kotor1/xml/')
-kotor2_files = getListOfFiles('infinity_engine/kotor2/xml/')
-files = kotor1_files + kotor2_files
+#kotor1_files = getListOfFiles('infinity_engine/kotor1/xml/')
+#kotor2_files = getListOfFiles('infinity_engine/kotor2/xml/')
+nwn_files = getListOfFiles('infinity_engine/nwn/xml/')
+#files = kotor1_files + kotor2_files + nwn_files
+files = nwn_files
 #files = [list(files)[5]]
 for file in files:
     df = pd.DataFrame(columns=[ 'file','id', 'sid', 'speaker', 'replies'])
@@ -165,8 +167,6 @@ for file in files:
     dfs.append(df)
 
 df = [df.set_index('sid') for df in dfs]
-
 df = pd.concat(df, axis=0)
-
-filename = 'kotor_dataset.csv'
+filename = 'nwn_dataset.csv'
 df.to_csv(filename, encoding='utf-8')
