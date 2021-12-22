@@ -71,47 +71,53 @@ def update_speakers(xml_dict, list_type):
                         df.at[entry_id, 'speaker'] = 'not_found'
                         
 def update_replies(xml_dict, list_type):
+    
     for entry in xml_dict:
+        
         try:
             entry_keys = entry.keys()
+            
         except AttributeError:
             return None
-        
+       # print()
+        #print(list_type, entry)
         for key in entry_keys:
-            if key == 'list':
-                for elem in entry['list']:
-                
-                    try:
-                        try:
+                if key == 'list':
+                    for elem in entry['list']:
                         
-                            if elem["@label"] == 'RepliesList':
-                                entry_id = entry['@id']+"_entry"
-                                
-                                reply_id = elem['struct']['uint32']['#text']+"_reply"
-                                df.at[entry_id, 'replies'] = [id_sid_mapping[reply_id]]
-                            if elem["@label"] == 'EntriesList':
-                                    entry_id = entry['@id']+"_reply" 
-                                    reply_id = elem['struct']['uint32']['#text']+"_entry"
-                                    df.at[entry_id, 'replies'] = [id_sid_mapping[reply_id]]
-                        except KeyError:
-                                pass
-                    except TypeError:
-                        replies = []
-                        if elem["@label"] == 'EntriesList': 
-                            for reply in elem['struct']:
-                                entry_id = entry['@id']+"_reply" 
-                                reply_id = reply['uint32']['#text']+"_entry"
-                                replies.append(id_sid_mapping[reply_id])
-                                df.at[entry_id, 'replies'] = replies
-                        if elem["@label"] == 'RepliesList':
-                            try: 
-                                for reply in elem['struct']:
+                        try:
+                            try:
+                                if entry['list']['@label'] == 'RepliesList':
                                     entry_id = entry['@id']+"_entry"
-                                    reply_id = reply['uint32']['#text']+"_reply"
-                                    replies.append(id_sid_mapping[reply_id])
-                                    df.at[entry_id, 'replies'] = replies
-                            except KeyError:
+                                    reply_id = entry['list']['struct']['uint32']['#text']+"_reply"
+                                    df.at[entry_id, 'replies'] = [id_sid_mapping[reply_id]]
+                                if entry['list']['@label'] == 'EntriesList':
+                                        entry_id = entry['@id']+"_reply" 
+                                        reply_id = entry['list']['struct']['uint32']['#text']+"_entry"
+                                        df.at[entry_id, 'replies'] = [id_sid_mapping[reply_id]]
+                            except KeyError: 
                                 pass
+                        except TypeError:
+                            replies = []
+                            try:
+                                if entry['list']['@label'] == 'EntriesList': 
+                                    for reply in entry['list']['struct']:
+                                        entry_id = entry['@id']+"_reply" 
+                                        reply_id = reply['uint32']['#text']+"_entry"
+                                        replies.append(id_sid_mapping[reply_id])
+                                        df.at[entry_id, 'replies'] = replies
+                                if entry['list']['@label'] == 'RepliesList':
+                                    try: 
+                                        for reply in entry['list']['struct']:
+                                            entry_id = entry['@id']+"_entry"
+                                            reply_id = reply['uint32']['#text']+"_reply"
+                                            replies.append(id_sid_mapping[reply_id])
+                                            df.at[entry_id, 'replies'] = replies
+                                    except KeyError:
+                                        pass
+                            except TypeError:
+                                pass
+                                
     
                     
 #kotor1_files = getListOfFiles('infinity_engine/kotor1/xml/')
@@ -119,10 +125,9 @@ def update_replies(xml_dict, list_type):
 nwn_files = getListOfFiles('infinity_engine/nwn/xml/')
 #files = kotor1_files + kotor2_files + nwn_files
 files = nwn_files
-#files = [list(files)[5]]
+#files = [list(files)[4]]
 for file in files:
     df = pd.DataFrame(columns=['filename','id', 'sid', 'speaker', 'replies'])
-    
     with open(file, 'rb') as f:
         xml = xmltodict.parse(f)
         xml = json.dumps(xml)
@@ -135,9 +140,9 @@ for file in files:
                     list_type = elem['@label']
                     try:
                         entry_dict = elem['struct']
+                        update_idx(entry_dict, list_type, file)
                     except KeyError:
                         print("Error finding struct for",elem)
-                    update_idx(entry_dict, list_type, file)
             except TypeError:
                 pass
 
@@ -147,13 +152,15 @@ for file in files:
                     list_type = elem['@label']
                     try:
                         entry_dict = elem['struct']
+
                     except KeyError:
                         print("Error finding struct for",elem)
-
                     update_speakers(entry_dict, list_type)
                     update_replies(entry_dict, list_type)
             except TypeError:
                 pass
+
+
 
         
         
@@ -167,9 +174,12 @@ for file in files:
     #headers = ['sid', 'speaker', 'replies']
     #df = pd.concat(data, axis=1, keys=headers, ignore_index=True)
     print(df)
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(df.to_string)
     dfs.append(df)
 
 df = [df.set_index('sid') for df in dfs]
 df = pd.concat(df, axis=0)
+
 filename = 'nwn_dataset.csv'
 df.to_csv(filename, encoding='utf-8')
