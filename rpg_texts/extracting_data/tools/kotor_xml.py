@@ -51,6 +51,10 @@ def update_idx(xml_dict, list_type, file):
                 df.at[entry_id, 'id'] = entry_id
                 df.at[entry_id, 'sid'] = string_id
                 df.at[entry_id, 'filename'] = file
+                if 'infinity_engine/kotor1/xml/' in file:
+                    df.at[entry_id, 'game'] = 'KotOR 1'
+                if 'infinity_engine/kotor2/xml/' in file:
+                    df.at[entry_id, 'game'] = 'KotOR 2'
                 id_sid_mapping[entry_id] = string_id
             except UnboundLocalError:
                 pass
@@ -114,14 +118,15 @@ def update_replies(xml_dict, list_type):
                                 pass
     
                     
-#kotor1_files = getListOfFiles('infinity_engine/kotor1/xml/')
-#kotor2_files = getListOfFiles('infinity_engine/kotor2/xml/')
-nwn_files = getListOfFiles('extracting_data/infinity_engine/nwn/xml/')
-#files = kotor1_files + kotor2_files + nwn_files
-files = nwn_files
+kotor1_files = getListOfFiles('extracting_data/infinity_engine/kotor1/xml/')
+kotor2_files = getListOfFiles('extracting_data/infinity_engine/kotor2/xml/')
+
+#nwn_files = getListOfFiles('extracting_data/infinity_engine/nwn/xml/')
+files = kotor1_files + kotor2_files
+#files = nwn_files
 #files = [list(files)[5]]
 for file in files:
-    df = pd.DataFrame(columns=['filename','id', 'sid', 'speaker', 'replies'])
+    df = pd.DataFrame(columns=['game', 'filename','id', 'sid', 'speaker', 'replies'])
     
     with open(file, 'rb') as f:
         xml = xmltodict.parse(f)
@@ -171,5 +176,5 @@ for file in files:
 
 df = [df.set_index('sid') for df in dfs]
 df = pd.concat(df, axis=0)
-filename = 'nwn_dataset.csv'
+filename = 'kotor_dataset.csv'
 df.to_csv(filename, encoding='utf-8')

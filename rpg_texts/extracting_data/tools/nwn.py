@@ -51,6 +51,7 @@ def update_idx(xml_dict, list_type, file):
                 df.at[entry_id, 'id'] = entry_id
                 df.at[entry_id, 'sid'] = string_id
                 df.at[entry_id, 'filename'] = file
+                df.at[entry_id, 'game'] = 'NWN 1'
                 id_sid_mapping[entry_id] = string_id
             except UnboundLocalError:
                 pass
