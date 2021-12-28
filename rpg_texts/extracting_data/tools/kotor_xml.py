@@ -116,7 +116,7 @@ def update_replies(xml_dict, list_type):
                     
 #kotor1_files = getListOfFiles('infinity_engine/kotor1/xml/')
 #kotor2_files = getListOfFiles('infinity_engine/kotor2/xml/')
-nwn_files = getListOfFiles('infinity_engine/nwn/xml/')
+nwn_files = getListOfFiles('extracting_data/infinity_engine/nwn/xml/')
 #files = kotor1_files + kotor2_files + nwn_files
 files = nwn_files
 #files = [list(files)[5]]
