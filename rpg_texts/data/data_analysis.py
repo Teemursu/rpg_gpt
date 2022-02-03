@@ -1,4 +1,4 @@
 import pandas as pd
 
-df = pd.read_csv('data\kotor_dataset.csv')
-print(df['speaker'].value_counts())
+df = pd.read_csv('data\persuasion_dialogue_dataset.csv')
+print(df['persuasion'].value_counts())

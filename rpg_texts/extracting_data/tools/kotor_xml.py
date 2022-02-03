@@ -34,6 +34,8 @@ def update_idx(xml_dict, list_type, file):
                 entry_id = entry['@id']+"_entry"
             if list_type == 'ReplyList':
                 entry_id = entry['@id']+"_reply"
+            if list_type == 'StartingList':
+                entry_id = entry['@id']+"_start"
         except TypeError:
             return None
         
@@ -42,12 +44,19 @@ def update_idx(xml_dict, list_type, file):
             entry_keys = entry.keys()
         except AttributeError:
             return None
+        #if list_type == 'StartingList':
+            #print(xml_dict)
+            #print()
         for key in entry_keys:
             if key == 'locstring':              
                 string_id = entry['locstring']['@strref']
+                
                 if string_id == '4294967295':
                     string_id = "EoC"
+                if string_id == '3561':
+                    print("HERE", entry)
             try:
+                
                 df.at[entry_id, 'id'] = entry_id
                 df.at[entry_id, 'sid'] = string_id
                 df.at[entry_id, 'filename'] = file
@@ -62,17 +71,25 @@ def update_idx(xml_dict, list_type, file):
 def update_speakers(xml_dict, list_type):
     for entry in entry_dict:
         try:
-            entry_id = entry['@id']+"_entry"
+            
+            if list_type == 'StartingList':
+                entry_id = entry['@id']+"_start"
+            else:
+                entry_id = entry['@id']+"_entry"
         except TypeError:
-            return None 
+            return None
+         
         for key in entry.keys():
             if key == 'exostring':
                 for elem in entry['exostring']:
+   
                     try:
                         if elem["@label"] == 'Speaker':
                             df.at[entry_id, 'speaker'] = elem['#text']
+
                     except KeyError:
                         df.at[entry_id, 'speaker'] = 'not_found'
+                        
                         
 def update_replies(xml_dict, list_type):
     for entry in xml_dict:
@@ -80,7 +97,7 @@ def update_replies(xml_dict, list_type):
             entry_keys = entry.keys()
         except AttributeError:
             return None
-        
+
         for key in entry_keys:
             if key == 'list':
                 for elem in entry['list']:
@@ -97,6 +114,7 @@ def update_replies(xml_dict, list_type):
                                     entry_id = entry['@id']+"_reply" 
                                     reply_id = elem['struct']['uint32']['#text']+"_entry"
                                     df.at[entry_id, 'replies'] = [id_sid_mapping[reply_id]]
+                            
                         except KeyError:
                                 pass
                     except TypeError:
@@ -132,8 +150,11 @@ for file in files:
         xml = xmltodict.parse(f)
         xml = json.dumps(xml)
         xml = json.loads(xml)
-        xml_dict = xml['gff3']['struct']['list']
-        print("Processing file:",file)
+        try:
+            xml_dict = xml['gff3']['struct']['list']
+        except KeyError:
+            print(xml)
+        #print("Processing file:",file)
         for elem in xml_dict:
             try:
                 if elem['@label'] == 'EntryList' or elem['@label'] == 'ReplyList' or elem['@label'] == 'StartingList':
@@ -141,7 +162,8 @@ for file in files:
                     try:
                         entry_dict = elem['struct']
                     except KeyError:
-                        print("Error finding struct for",elem)
+                        #print("Error finding struct for",elem)
+                        pass
                     update_idx(entry_dict, list_type, file)
             except TypeError:
                 pass
@@ -153,7 +175,8 @@ for file in files:
                     try:
                         entry_dict = elem['struct']
                     except KeyError:
-                        print("Error finding struct for",elem)
+                        #print("Error finding struct for",elem)
+                        pass
 
                     update_speakers(entry_dict, list_type)
                     update_replies(entry_dict, list_type)
@@ -171,7 +194,6 @@ for file in files:
     #data = [df['sid'], df['speaker'],df['replies']]
     #headers = ['sid', 'speaker', 'replies']
     #df = pd.concat(data, axis=1, keys=headers, ignore_index=True)
-    print(df)
     dfs.append(df)
 
 df = [df.set_index('sid') for df in dfs]
