@@ -29,7 +29,7 @@ def getListOfFiles(dirName):
 def get_node_ids(elem, file):
     # pprint(elem)
     node_id = elem["NodeID"]
-
+    # pprint(elem)
     # print("NODE ID:",node_id)
     from_idx = []
     to_idx = []
@@ -75,8 +75,8 @@ def get_node_ids(elem, file):
     return df
 
 
-dialogue_files = getListOfFiles("extracting_data\eternity_engine\poe2\exported")
-attribute_files = getListOfFiles("extracting_data\eternity_engine\poe2\conversations")
+# dialogue_files = getListOfFiles("extracting_data\eternity_engine\poe2\exported")
+attribute_files = getListOfFiles("extracting_data\eternity_engine\poe2\\attr")
 # attribute_files = ['extracting_data/eternity_engine/Tyranny/conversations/global/slides_act01_intro.conversation']
 
 df = pd.DataFrame(
@@ -92,19 +92,35 @@ df = pd.DataFrame(
         "difficulty",
     ]
 )
-
+# attribute_files = [
+#    "extracting_data\\eternity_engine\\poe2\\attr\\lax3_exported\\design\\conversations\\lax03_forgotten_sanctum\\lax03_03_cv_book_pedestal_archive_01.conversationbundle"
+# ]
 for file in attribute_files:
     # print(file)
-    with open(file, "r") as f:
+    with open(file, "r", encoding="utf-8") as f:
         # o = xmltodict.parse(f)
         # lines = json.dumps(o)
-        f = f.read()
-        lines = json.loads(f)
-        for elem in lines["Conversations"][0]["Nodes"]:
-            if len(elem["Conditionals"]["Components"]) > 0:
-                # update IDs, reply IDs, and skillchecks
-                df = pd.concat([get_node_ids(elem, file), df], ignore_index=True)
-                # print(df['persuasion'].value_counts())
-
+        try:
+            f = f.read()
+            try:
+                lines = json.loads(f)
+                if ".conversationbundle" in file:
+                    for elem in lines["Conversations"][0]["Nodes"]:
+                        # if len(elem["Conditionals"]["Components"]) > 0:
+                        # update IDs, reply IDs, and skillchecks
+                        df = pd.concat(
+                            [get_node_ids(elem, file), df], ignore_index=True
+                        )
+                        # print(df['persuasion'].value_counts())
+                if ".chatterbundle" in file:
+                    for elem in lines["ChatterFiles"][0]["Nodes"]:
+                        # if len(elem["Conditionals"]["Components"]) > 0:
+                        df = pd.concat(
+                            [get_node_ids(elem, file), df], ignore_index=True
+                        )
+            except json.decoder.JSONDecodeError:
+                print("json error with", file)
+        except UnicodeDecodeError:
+            print("Error reading file", file)
 filename = "data/only_ids/poe2_dataset_only_ids.csv"
-df.to_csv(filename, encoding="utf-8")
+df.to_csv(filename, encoding="utf-8", sep="\t")

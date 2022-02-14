@@ -178,4 +178,4 @@ for game in games:
                 # print(df)
 
     filename = "data/only_ids/" + game + "_dataset_only_ids.csv"
-    df.to_csv(filename, encoding="utf-8")
+    df.to_csv(filename, encoding="utf-8", sep="\t")

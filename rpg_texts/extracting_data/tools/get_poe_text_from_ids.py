@@ -28,28 +28,52 @@ def getListOfFiles(dirName):
     return allFiles
 
 
-games = ["poe1", "poe2", "tyranny"]
-langs = ["en", "de", "es", "fr", "it", "pl", "ru", "pt", "zh"]
+games = ["poe2"]  # "poe1", "poe2", "tyranny"]
+langs = ["en"]  # "de", "es", "fr", "it", "pl", "ru", "pt", "zh"]
 
 for game in games:
     with open("data/only_ids/" + game + "_dataset_only_ids.csv", "r") as f:
-        df = pd.read_csv(f)
+        df = pd.read_csv(f, sep="\t")
         df["text"] = ""
         files = df.filename.unique()
+        # files = [
+        #    "extracting_data/eternity_engine/poe2/attr/laxi_exported/design/conversations/laxi/laxi_00_si_god.conversationbundle"
+        # ]
+        if game == "tyranny":
+            files = getListOfFiles(
+                "extracting_data\eternity_engine\\tyranny\extrastrings"
+            )
     for lang in langs:
         df[lang] = ""
         for filename in files:
-            orig_filename = filename
-            filename = re.sub("\\\\", "/", filename)
-            filename = re.sub(
-                "conversations",
-                "exported/localized/{}/text/conversations".format(lang),
-                filename,
-            )
-            if game == "tyranny" or game == "poe1":
-                filename = re.sub(r"\.conversation", ".stringtable", filename)
-            if game == "poe2":
-                filename = re.sub(r"\.conversationbundle", ".stringtable", filename)
+            if game != "tyranny":
+                orig_filename = filename
+                print(orig_filename)
+                filename = re.sub("\\\\", "/", filename)
+                filename = re.sub(
+                    r"/design/",
+                    r"/localized/en/text/",
+                    filename,
+                )
+                filename = re.sub(
+                    r"/attr/",
+                    r"/str/",
+                    filename,
+                )
+                if game == "tyranny" or game == "poe1":
+                    filename = re.sub(".conversation", ".stringtable", filename)
+                if game == "poe2":
+                    filename = re.sub(".chatterbundle", ".stringtable", filename)
+                    filename = re.sub(".conversationbundle", ".stringtable", filename)
+                print(filename)
+
+            if game == "tyranny":
+                orig_filename = re.sub(
+                    r"extrastrings\\exported\d\\localized\\en\\",
+                    "",
+                    filename,
+                )
+                orig_filename = re.sub(".stringtable", r".conversation", orig_filename)
             try:
                 with open(filename, "rb") as f:
                     try:
@@ -57,7 +81,7 @@ for game in games:
                     except:
                         print("error reading xml file", filename)
                         break
-                    print(filename, "found!")
+                    # print(filename, "found!")
                     entrydict = lines["StringTableFile"]["Entries"]
 
                     if type(entrydict["Entry"]) == dict:
@@ -76,4 +100,4 @@ for game in games:
                 # print(file, "not found")
                 pass
 
-    df.to_csv("data/" + game + "_dataset.csv")
+    df.to_csv("data/" + game + "_dataset.csv", sep="\t")
