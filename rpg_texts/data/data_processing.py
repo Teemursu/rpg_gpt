@@ -4,7 +4,7 @@ import re
 import numpy as np
 
 langs = ["en", "de", "fr", "it", "es"]
-df = pd.read_csv("data\persuasion_dialogue_dataset.csv")
+df = pd.read_csv("data\poe2_dataset.csv", sep="\t")
 
 
 def clean_source(source):
@@ -46,9 +46,9 @@ def clean_source(source):
         return ""
 
 
-print(df["is_persuasion"].value_counts())
+print(df["persuasion"].value_counts())
 print(len(df))
-df = df.dropna(subset=["sid", "en", "de", "es", "it", "fr"])
+df = df.dropna(subset=["en"])
 
 
 for lang in langs:
@@ -73,5 +73,5 @@ print(df["is_persuasion"].value_counts())
 
 print(df.head())
 
-digra_df = df.drop(["filename", "id", "speaker", "replies"], 1)
+# digra_df = df.drop(["filename", "id", "speaker", "replies"], 1)
 digra_df.to_csv("digra.csv")
