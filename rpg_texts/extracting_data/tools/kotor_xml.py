@@ -144,7 +144,7 @@ kotor1_files = getListOfFiles("extracting_data/infinity_engine/kotor1/xml/")
 kotor2_files = getListOfFiles("extracting_data/infinity_engine/kotor2/xml/")
 
 # nwn_files = getListOfFiles('extracting_data/infinity_engine/nwn/xml/')
-files = kotor1_files
+files = kotor2_files
 # files = nwn_files
 # files = [list(files)[5]]
 for file in files:
@@ -207,5 +207,5 @@ for file in files:
 
 df = [df.set_index("sid") for df in dfs]
 df = pd.concat(df, axis=0)
-filename = "kotor_dataset.csv"
+filename = "kotor2_dataset.csv"
 df.to_csv(filename, encoding="utf-8")

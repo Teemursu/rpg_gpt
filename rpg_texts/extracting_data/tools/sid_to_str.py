@@ -20,12 +20,36 @@ perses = [
     "[ Peru",
     "[Überreden/Lügen]",
     "[Überreden/Bluff]",
+    "[Insight]",
+    "[Intimidate]",
+    "[Perform]",
+    "[Bluff]",
+    "[Spellcraft]",
+    "[Lore]",
+    "[Dexterity]",
+    "[Make an Intelligence Check]",
+    "[Use Intelligence]",
+    "[Use Open Lock Skill]",
+    "[Wisdom]",
+    "[Force Persuade]",
+    "[Computer Skill]",
+    "[Repair]",
+    "[Awareness]",
+    "[Security]",
+    "[Computer]",
+    "[Demolitions]",
+    "[Treat Injury]",
+    "[Strength]",
+    "[Dexterity]",
+    "[Intelligence]",
+    "[Wisdom]",
+    "[Constitution]",
 ]
 
-kotor1_df = pd.read_csv("data/kotor1_dataset.csv")
-kotor2_df = pd.read_csv("data/kotor2_dataset.csv")
-nwn_df = pd.read_csv("data/nwn_dataset.csv")
-langs = ["en", "de", "fr", "it", "es"]
+kotor1_df = pd.read_csv("data/old/kotor1_dataset.csv")
+kotor2_df = pd.read_csv("data/old/kotor2_dataset.csv")
+nwn_df = pd.read_csv("data/old/nwn_dataset.csv")
+langs = ["en"]  # "de", "fr", "it", "es"]
 
 df_games_dict = {"kotor1": kotor1_df, "kotor2": kotor2_df, "nwn": nwn_df}
 for game, df in zip(df_games_dict.keys(), df_games_dict.values()):
@@ -89,5 +113,5 @@ df = pd.concat(
     [df for df in df_games_dict.values()],
     axis=0,
 )
-filename = "persuasion_dialogue_dataset.csv"
+filename = "persuasion_dialogue_datasetOLD.csv"
 df.to_csv(filename, encoding="utf-8")
