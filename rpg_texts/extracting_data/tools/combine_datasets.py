@@ -167,7 +167,7 @@ for i, row in df.iterrows():
 df.loc[df.persuasion == "Intellect"] = "Intelligence"
 df.loc[df.persuasion == "Spellcraft"] = "Magic"
 # df.loc[df.persuasion == "Awareness"] = "Insight"
-rows = df["en"][(df.persuasion == "Perception") & (df.en != float)]
+rows = df["en"][(df.persuasion == "Constitution") & (df.en != float)]
 rows = rows.dropna()
 print(rows)
 print()
