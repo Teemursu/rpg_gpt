@@ -46,9 +46,9 @@ device_ids = [
 # Load tokenizer and model
 tokenizer = GPT2Tokenizer.from_pretrained("EleutherAI/gpt-neo-2.7B",
                                           cache_dir="cached")
-model = deepspeed.initialize(GPTNeoForCausalLM.from_pretrained("EleutherAI/gpt-neo-2.7B", 
-                                          torch_dtype=torch.float16,
-                                          cache_dir="cached"))
+model = GPTNeoForCausalLM.from_pretrained("EleutherAI/gpt-neo-2.7B", 
+                                          #torch_dtype=torch.float16,
+                                          cache_dir="cached")
 
 # Add special tokens to tokenizer
 num_added_toks = tokenizer.add_special_tokens(
@@ -109,7 +109,7 @@ for _, row in df.iterrows():
 print(examples)
 # Prepare training arguments
 training_args = TrainingArguments(
-    output_dir='./results',          # output directory
+    output_dir='results',          # output directory
     evaluation_strategy = "steps", 
     cache_dir = "cached",
     eval_steps = 50,
@@ -119,9 +119,11 @@ training_args = TrainingArguments(
     weight_decay=0.01,              # weight decay
     learning_rate=3e-5,             # learning rate
     warmup_steps=500,               # warmup steps
-    logging_dir='./logs',           # directory for storing logs
+    logging_dir='logs',           # directory for storing logs
     logging_steps=50,
-    save_steps=50
+    save_steps=50,
+    
+    deepspeed="configs/ds_config.json"
 )
 
 # Prepare optimizer
