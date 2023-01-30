@@ -140,25 +140,13 @@ import json
 from torch.utils.data import DataLoader, IterableDataset
 
 
-class JsonDataset(IterableDataset):
-    def __init__(self, files):
-        self.files = files
-
-    def __iter__(self):
-        for json_file in self.files:
-            with open(json_file) as f:
-                for sample_line in f:
-                    sample = json.loads(sample_line)
-                    yield sample["x"], sample["time"], ...
-
-
 train_dataset = "data/NLG_RPG.jsonl"
 samples = []
 with open(train_dataset) as f:
     for sample_line in f:
         sample = json.loads(sample_line)
         samples.append(sample)
-train_dataset = samples[:10000]
+train_dataset = samples
 encoded_data = []
 for example in train_dataset:
     prompt = example["prompt"]
