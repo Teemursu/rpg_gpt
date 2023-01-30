@@ -8,6 +8,10 @@
 #SBATCH -o logfiles/gptrpg.out.%j
 #SBATCH -e logfiles/gptrpg.err.%j
 #SBATCH --account=project_2001403
+#SBATCH --cpus-per-task=32
+
+# set the number of threads based on --cpus-per-task
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 export PATH=$PATH:/users/poyhnent/.local/bin
 
