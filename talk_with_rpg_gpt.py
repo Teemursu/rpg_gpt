@@ -15,10 +15,10 @@ from transformers.utils import logging
 logging.set_verbosity_info()
 
 tokenizer = AutoTokenizer.from_pretrained(
-    "model_new/gpt-neo-2.7b",
+    "gptj_rpg",
     # padding_side="right",
 )
-model = AutoModelWithLMHead.from_pretrained("model_new/gpt-neo-2.7b")
+model = AutoModelWithLMHead.from_pretrained("gptj_rpg")
 
 # Let's chat for 5 lines
 for step in range(10):
