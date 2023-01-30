@@ -25,6 +25,11 @@ from torch.nn.utils.rnn import pad_sequence
 from sklearn.model_selection import train_test_split
 
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
+from torch.distributed.fsdp.wrap import (
+    size_based_auto_wrap_policy,
+    enable_wrap,
+    wrap,
+)
 
 import pickle
 from typing import Dict, List, Tuple
@@ -49,10 +54,11 @@ os.environ["TRANSFORMERS_CACHE"] = "/cache"
 # local_rank = int(os.environ["LOCAL_RANK"])
 # torch.cuda.set_device(local_rank)
 deepspeed.init_distributed()
+# deepspeed.init_process_group("nccl")
 # torch.distributed.init_process_group(backend="nccl")
-torch.distributed.barrier()
-torch.cuda.set_device(torch.cuda.current_device())
-ddp_params = {"num_losses": 1}
+# torch.distributed.barrier()
+# torch.cuda.set_device(torch.cuda.current_device())
+# ddp_params = {"num_losses": 1}
 
 device_ids = [
     torch.device("cuda:0"),
@@ -64,7 +70,7 @@ device_ids = [
 model_type = "gpt-j-6B"
 
 # Load tokenizer and model
-max_length = 10
+max_length = 100
 truncate = True
 tokenizer = GPT2Tokenizer.from_pretrained(
     "EleutherAI/gpt-j-6B",
@@ -82,105 +88,7 @@ model = GPTJForCausalLM.from_pretrained(
     low_cpu_mem_usage=True,
 )
 
-# Add special tokens to tokenizer
-num_added_toks = tokenizer.add_special_tokens(
-    {
-        "pad_token": "[PAD]",
-        "additional_special_tokens": [
-            "<|persuade|>",
-            "<|computer|>",
-            "<|forcepersuade|>",
-            "<|insight|>",
-            "<|might|>",
-            "<|perception|>",
-            "<|awareness|>",
-            "<|repair|>",
-            "<|resolve|>",
-            "<|intimidate|>",
-            "<|magic|>",
-            "<|constitution|>",
-            "<|dexterity|>",
-            "<|wisdom|>",
-            "<|demolitions|>",
-            "<|treatinjury|>",
-            "<|bows|>",
-            "<|bluff|>",
-            "<|survival|>",
-            "<|security|>",
-            "<|swords|>",
-            "<|mechanics|>",
-            "<|perform|>",
-            "<|playername|>",
-        ],
-    }
-)
-# print(f"Added {num_added_toks} special tokens: {special_tokens}")
 
-# Prepare data
-# Assuming df has columns "response", "context/0", "context/1", ..., "context/8"
-df = "data/nlg_data_10_turns_all_data_without_consoledialogue.csv"
-df = pd.read_csv(df, sep="\t")
-df.drop("Unnamed: 0.1", axis=1, inplace=True)
-df.drop("Unnamed: 0", axis=1, inplace=True)
-df = df.drop_duplicates()
-df.drop("game", axis=1, inplace=True)
-df = df[df.columns[: list(df.columns).index("context/3") + 1]]
-df = df.dropna()
-
-# trn_df, val_df = train_test_split(df, test_size=0.1)
-trn_df = df.head(30)
-# trn_df.head()
-
-
-def construct_conv(row, tokenizer, eos=True):
-    flatten = lambda l: [item for sublist in l for item in sublist]
-    conv = list(
-        reversed([tokenizer.encode(str(x)) + [tokenizer.eos_token_id] for x in row])
-    )
-    conv = flatten(conv)
-    return conv
-
-
-class ConversationDataset(Dataset):
-    def __init__(self, tokenizer: tokenizer, df, block_size=512):
-        overwrite_cache = True
-        # block_size = block_size #- (
-        # tokenizer.model_max_length - tokenizer.max_len_single_sentence
-        # )
-
-        directory = "cached"
-        cached_features_file = os.path.join(
-            directory, model_type + "_cached_lm_" + str(block_size)
-        )
-
-        if os.path.exists(cached_features_file) and not overwrite_cache:
-            logger.info("Loading features from cached file %s", cached_features_file)
-            with open(cached_features_file, "rb") as handle:
-                self.examples = pickle.load(handle)
-        else:
-            logger.info("Creating features from dataset file at %s", directory)
-
-            self.examples = []
-            for _, row in df.iterrows():
-                conv = construct_conv(row, tokenizer)
-                self.examples.append(conv)
-
-            logger.info("Saving features into cached file %s", cached_features_file)
-            with open(cached_features_file, "wb") as handle:
-                pickle.dump(self.examples, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    def __len__(self):
-        return len(self.examples)
-
-    def __getitem__(self, item):
-        return torch.tensor(self.examples[item], dtype=torch.long)
-
-
-def load_and_cache_examples(tokenizer, df_trn):
-    return ConversationDataset(tokenizer, df_trn)
-
-
-train_dataset = load_and_cache_examples(tokenizer, trn_df)
 torch.cuda.empty_cache()
 # print(examples)
 # Prepare training arguments
@@ -228,19 +136,49 @@ def collate(examples: List[torch.Tensor]):
     return torch.stack(examples)
 
 
-train_sampler = DistributedSampler(train_dataset)
-train_dataloader = DataLoader(
-    train_dataset, collate_fn=collate, batch_size=1, sampler=train_sampler
-)
-for i, example in enumerate(train_dataloader):
-    example_len = example.shape[1]
-    if example_len > max_length:
-        max_length = example_len
+import json
+from torch.utils.data import DataLoader, IterableDataset
 
-print(
-    "Longest instance is length",
-    max_length,
-)
+
+class JsonDataset(IterableDataset):
+    def __init__(self, files):
+        self.files = files
+
+    def __iter__(self):
+        for json_file in self.files:
+            with open(json_file) as f:
+                for sample_line in f:
+                    sample = json.loads(sample_line)
+                    yield sample["x"], sample["time"], ...
+
+
+train_dataset = "data/NLG_RPG.jsonl"
+samples = []
+with open(train_dataset) as f:
+    for sample_line in f:
+        sample = json.loads(sample_line)
+        samples.append(sample)
+train_dataset = samples[:10000]
+encoded_data = []
+for example in train_dataset:
+    prompt = example["prompt"]
+    completion = example["completion"]
+    input_text = prompt + completion
+    encoded_input = tokenizer.encode(input_text, return_tensors="pt")
+    encoded_data.append(encoded_input)
+# )
+
+encoded_data = []
+for example in train_dataset:
+    prompt = example["prompt"]
+    completion = example["completion"]
+    input_text = prompt + completion
+    encoded_input = tokenizer.encode(input_text, return_tensors="pt")
+    encoded_data.append(encoded_input)
+
+train_sampler = torch.utils.data.SequentialSampler(encoded_data)
+train_dataloader = DataLoader(encoded_data, batch_size=1, sampler=train_sampler)
+
 
 torch.cuda.empty_cache()
 num_epochs = 3
