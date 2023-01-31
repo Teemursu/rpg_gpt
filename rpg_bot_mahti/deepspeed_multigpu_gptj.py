@@ -170,22 +170,15 @@ samples = []
 with open(train_dataset) as f:
     for sample_line in f:
         sample = json.loads(sample_line)
-        samples.append(sample)
-# train_dataset = samples
+        prompt = sample["prompt"]
+        completion = sample["completion"]
+        samples.append((prompt, completion))
 dataset = DialogueDataset(samples)
 # )
 
-encoded_data = []
-for example in train_dataset:
-    prompt = example["prompt"]
-    completion = example["completion"]
-    input_text = prompt + completion
-    encoded_input = tokenizer.encode(input_text, return_tensors="pt")
-    encoded_data.append(encoded_input)
-
-train_sampler = torch.utils.data.SequentialSampler(encoded_data)
+train_sampler = torch.utils.data.SequentialSampler(dataset)
 train_dataloader = DataLoader(
-    encoded_data, batch_size=1, sampler=train_sampler, collate_fn=collate
+    dataset, batch_size=1, sampler=train_sampler, collate_fn=collate
 )
 
 
