@@ -1,4 +1,6 @@
 cached/
-data/
+data/NLG_clean_with_speakers.csv
+data/NLG_RPG.csv
+data/NLG_RPG.jsonl
 logfiles/
 venv/

@@ -116,24 +116,49 @@ optimizer = torch.optim.SGD(model.parameters(), lr=training_args.learning_rate)
 torch.cuda.empty_cache()
 
 
+class DialogueDataset(Dataset):
+    def __init__(self, examples):
+        self.examples = examples
+
+    def __len__(self):
+        return len(self.examples)
+
+    def __getitem__(self, idx):
+        return self.examples[idx]
+
+
+def tokenize(text, max_length):
+    input_ids = tokenizer.encode(text, add_special_tokens=True)
+    pad_length = max_length - len(input_ids)
+    input_ids = input_ids + [tokenizer.pad_token_id] * pad_length
+    return torch.tensor(input_ids)
+
+
 def collate(examples: List[torch.Tensor]):
-    if truncate:
-        examples = [ex[:max_length] for ex in examples]
-    examples = [
-        torch.cat(
-            (
-                ex,
-                torch.full(
-                    (max_length - len(ex),), tokenizer.pad_token_id, dtype=torch.long
-                ),
-            ),
-            0,
-        )
-        if len(ex) < max_length
-        else ex
-        for ex in examples
-    ]
-    return torch.stack(examples)
+    prompts = [e[0] for e in examples]
+    completions = [e[1] for e in examples]
+
+    max_length = 50
+
+    tokenized_prompts = [tokenize(p, max_length) for p in prompts]
+    tokenized_completions = [tokenize(c, max_length) for c in completions]
+
+    truncated_prompts = []
+    truncated_completions = []
+
+    for p, c in zip(tokenized_prompts, tokenized_completions):
+        combined_text = p + c
+        if len(combined_text) > max_length:
+            diff = (
+                len(combined_text) - max_length + 1
+            )  # +1 to not truncate the pad token
+            p = p[:-diff]
+            combined_text = p + c
+
+        truncated_prompts.append(p)
+        truncated_completions.append(c)
+
+    return torch.stack(truncated_prompts), torch.stack(truncated_completions)
 
 
 import json
@@ -146,14 +171,8 @@ with open(train_dataset) as f:
     for sample_line in f:
         sample = json.loads(sample_line)
         samples.append(sample)
-train_dataset = samples
-encoded_data = []
-for example in train_dataset:
-    prompt = example["prompt"]
-    completion = example["completion"]
-    input_text = prompt + completion
-    encoded_input = tokenizer.encode(input_text, return_tensors="pt")
-    encoded_data.append(encoded_input)
+# train_dataset = samples
+dataset = DialogueDataset(samples)
 # )
 
 encoded_data = []
@@ -165,7 +184,9 @@ for example in train_dataset:
     encoded_data.append(encoded_input)
 
 train_sampler = torch.utils.data.SequentialSampler(encoded_data)
-train_dataloader = DataLoader(encoded_data, batch_size=1, sampler=train_sampler)
+train_dataloader = DataLoader(
+    encoded_data, batch_size=1, sampler=train_sampler, collate_fn=collate
+)
 
 
 torch.cuda.empty_cache()
@@ -191,8 +212,8 @@ for epoch in range(num_epochs):
     accumulated_loss = 0
     num_accumulated_steps = 0
     for batch in train_dataloader:
-        inputs, labels = (batch, batch)
-        outputs = model(inputs, labels=labels)
+        prompts, completions = batch
+        outputs = model(prompts, labels=completions)
         loss = outputs.loss
         accumulated_loss += loss
         num_accumulated_steps += 1
