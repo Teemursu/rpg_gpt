@@ -1,12 +1,14 @@
 import torch
 from transformers import (
-    GPTNeoXTokenizerFast,
-    GPTNeoXForCausalLM,
+    GPT2Tokenizer,
+    GPTJForCausalLM,
     TrainingArguments,
     Trainer,
+    DataCollatorForLanguageModeling,
 )
 import json
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset, DataLoader
+
 
 torch.cuda.manual_seed_all(42)
 
@@ -40,7 +42,7 @@ class DialogueDataset(Dataset):
         if len(input_ids) < self.max_length:
             padding = self.tokenizer.encode(
                 ("[PAD]" * (self.max_length - len(input_ids))), return_tensors="pt"
-            ).squeeze(0)
+            ).squeeze()
             input_ids = torch.cat((padding, input_ids), dim=0)
         else:
             pass
@@ -65,9 +67,10 @@ with open(train_dataset, encoding="utf8") as f:
         samples.append((prompt, completion))
 
 # Load tokenizer and model
-tokenizer = GPTNeoXTokenizerFast.from_pretrained(
-    "Eleutherai/Pythia-1B-deduped",
+tokenizer = GPT2Tokenizer.from_pretrained(
+    "EleutherAI/gpt-j-6B",
     cache_dir="cached",
+    # return_token_type_ids=False
     # mlm=False,
     # max_length=100,
     # truncation=True,
@@ -107,32 +110,41 @@ tokenizer.add_special_tokens(
         ],
     }
 )
-model = GPTNeoXForCausalLM.from_pretrained(
-    "Eleutherai/Pythia-1B-deduped",
+model = GPTJForCausalLM.from_pretrained(
+    "EleutherAI/gpt-j-6B",
     cache_dir="cached",
-    # revision="float16",
+    revision="float16",
     # torch_dtype=torch.float16,
     low_cpu_mem_usage=True,
-).cuda()
-model.resize_token_embeddings()
+)
+# )
+model.resize_token_embeddings(len(tokenizer))
+# model.to(torch.float16)
 # Define the data loader
 dataset = DialogueDataset(samples, tokenizer)
-
+data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 args = TrainingArguments(
     # model_name="gptj_rpg",
     output_dir="results",
     num_train_epochs=3,
     logging_steps=10,
-    per_device_train_batch_size=1,
-    warmup_steps=100,
+    per_device_train_batch_size=2,
+    warmup_steps=500,
     weight_decay=0.01,
     logging_dir="logs",
+    save_strategy="epoch",
+    gradient_accumulation_steps=1,
+    gradient_checkpointing=True,
+    # fp16=True,
+    optim="adafactor",
 )
 trainer = Trainer(
     model=model,
     args=args,
     train_dataset=dataset,
-    # data_collator=collate_fn,
+    data_collator=data_collator,
+    tokenizer=tokenizer,
+    # plugins="fsdp",
 )
 
 torch.cuda.empty_cache()
