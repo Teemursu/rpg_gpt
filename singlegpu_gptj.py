@@ -10,9 +10,6 @@ import json
 from torch.utils.data import Dataset, DataLoader
 
 
-torch.cuda.manual_seed_all(42)
-
-
 class DialogueDataset(Dataset):
     def __init__(self, instances, tokenizer):
         self.instances = instances
@@ -23,9 +20,10 @@ class DialogueDataset(Dataset):
         return len(self.instances)
 
     def __getitem__(self, idx):
-        prompt = self.instances[idx][0]
+        prompt = self.instances[idx][0].replace("\n", self.tokenizer.eos_token)
         completion = self.instances[idx][1]
 
+        completion += self.tokenizer.eos_token
         # Truncate the prompt from the left side, so that the most recent dialogue turns
         # give context to the completion, rather than the beginning of dialogue.
         input_ids = self.tokenizer.encode(
@@ -33,28 +31,35 @@ class DialogueDataset(Dataset):
             return_tensors="pt",
         ).squeeze()
         input_ids = (
-            input_ids[-self.max_length :]
-            if len(input_ids) > self.max_length
+            input_ids[-self.max_length + 1 :]
+            if len(input_ids) > self.max_length - 1
             else input_ids
         )
 
         # Padding from the left side, same reasoning as truncation happening from left.
         if len(input_ids) < self.max_length:
             padding = self.tokenizer.encode(
-                ("[PAD]" * (self.max_length - len(input_ids))), return_tensors="pt"
+                ("[PAD]" * (self.max_length - len(input_ids) - 1)), return_tensors="pt"
             ).squeeze()
-            input_ids = torch.cat((padding, input_ids), dim=0)
+            input_ids = torch.cat(
+                (padding, input_ids, torch.tensor([self.tokenizer.eos_token_id])), dim=0
+            )
         else:
             pass
         target_ids = self.tokenizer.encode(
             completion,
             return_tensors="pt",
             padding="max_length",
-            truncation=True,
+            truncation=False,
             max_length=self.max_length,
             # padding_side="left",
         ).squeeze()
-        return {"input_ids": input_ids, "labels": target_ids}
+        target_ids = (
+            target_ids[-self.max_length - 1 :]
+            if len(target_ids) > self.max_length - 1
+            else target_ids
+        )
+        return {"input_ids": input_ids.long(), "labels": target_ids.long()}
 
 
 train_dataset = "data/NLG_RPG.jsonl"
@@ -81,8 +86,11 @@ tokenizer = GPT2Tokenizer.from_pretrained(
 
 tokenizer.add_special_tokens(
     {
+        "sep_token": "\n",
         "pad_token": "[PAD]",
         "additional_special_tokens": [
+            "NPC:",
+            "Player:",
             "<|persuade|>",
             "<|computer|>",
             "<|forcepersuade|>",
@@ -124,15 +132,15 @@ model.resize_token_embeddings(len(tokenizer))
 dataset = DialogueDataset(samples, tokenizer)
 data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 args = TrainingArguments(
-    # model_name="gptj_rpg",
     output_dir="results",
     num_train_epochs=3,
-    logging_steps=10,
+    logging_steps=1000,
     per_device_train_batch_size=2,
     warmup_steps=500,
     weight_decay=0.01,
     logging_dir="logs",
-    save_strategy="epoch",
+    save_strategy="steps",
+    save_steps=20000,
     gradient_accumulation_steps=1,
     gradient_checkpointing=True,
     # fp16=True,
@@ -145,6 +153,7 @@ trainer = Trainer(
     data_collator=data_collator,
     tokenizer=tokenizer,
     # plugins="fsdp",
+    # use_cache=False,
 )
 
 torch.cuda.empty_cache()
