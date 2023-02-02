@@ -20,21 +20,17 @@ class DialogueDataset(Dataset):
         return len(self.instances)
 
     def __getitem__(self, idx):
-        prompt = self.instances[idx][0].replace("\n", self.tokenizer.eos_token)
+        prompt = self.instances[idx][0]
         completion = self.instances[idx][1]
 
         completion += self.tokenizer.eos_token
+        prompt += self.tokenizer.eos_token
         # Truncate the prompt from the left side, so that the most recent dialogue turns
         # give context to the completion, rather than the beginning of dialogue.
         input_ids = self.tokenizer.encode(
             prompt,
             return_tensors="pt",
         ).squeeze()
-        input_ids = (
-            input_ids[-self.max_length + 1 :]
-            if len(input_ids) > self.max_length - 1
-            else input_ids
-        )
 
         # Padding from the left side, same reasoning as truncation happening from left.
         if len(input_ids) < self.max_length:
@@ -42,7 +38,11 @@ class DialogueDataset(Dataset):
                 ("[PAD]" * (self.max_length - len(input_ids) - 1)), return_tensors="pt"
             ).squeeze()
             input_ids = torch.cat(
-                (padding, input_ids, torch.tensor([self.tokenizer.eos_token_id])), dim=0
+                (
+                    padding,
+                    input_ids,
+                ),
+                dim=0,
             )
         else:
             pass
@@ -54,11 +54,16 @@ class DialogueDataset(Dataset):
             max_length=self.max_length,
             # padding_side="left",
         ).squeeze()
-        target_ids = (
-            target_ids[-self.max_length - 1 :]
-            if len(target_ids) > self.max_length - 1
-            else target_ids
-        )
+
+        if len(target_ids) > self.max_length - 1:
+            target_ids = target_ids[: self.max_length - 1]
+        if len(input_ids) > self.max_length - 1:
+            input_ids = input_ids[-self.max_length + 1 :]
+        print(prompt)
+        print(input_ids)
+
+        print(completion)
+        print(target_ids)
         return {"input_ids": input_ids.long(), "labels": target_ids.long()}
 
 
