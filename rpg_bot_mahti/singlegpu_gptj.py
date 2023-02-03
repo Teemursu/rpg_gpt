@@ -59,11 +59,7 @@ class DialogueDataset(Dataset):
             target_ids = target_ids[: self.max_length - 1]
         if len(input_ids) > self.max_length - 1:
             input_ids = input_ids[-self.max_length + 1 :]
-        print(prompt)
-        print(input_ids)
 
-        print(completion)
-        print(target_ids)
         return {"input_ids": input_ids.long(), "labels": target_ids.long()}
 
 
