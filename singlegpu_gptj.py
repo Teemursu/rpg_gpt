@@ -87,7 +87,7 @@ tokenizer = GPT2Tokenizer.from_pretrained(
 
 tokenizer.add_special_tokens(
     {
-        "sep_token": "\n",
+        "sep_token": "[SEP]",
         "pad_token": "[PAD]",
         "additional_special_tokens": [
             "NPC:",
@@ -134,15 +134,15 @@ dataset = DialogueDataset(samples, tokenizer)
 data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 args = TrainingArguments(
     output_dir="results",
-    num_train_epochs=3,
-    logging_steps=1000,
+    num_train_epochs=20,
+    logging_steps=10000,
     per_device_train_batch_size=2,
-    warmup_steps=500,
+    warmup_steps=8000,
     weight_decay=0.01,
     logging_dir="logs",
-    save_strategy="steps",
-    save_steps=20000,
-    gradient_accumulation_steps=1,
+    save_strategy="epoch",
+    # save_steps=20000,
+    gradient_accumulation_steps=2,
     gradient_checkpointing=True,
     # fp16=True,
     optim="adafactor",
