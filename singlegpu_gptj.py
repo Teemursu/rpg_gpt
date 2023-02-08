@@ -23,51 +23,46 @@ class DialogueDataset(Dataset):
     def __getitem__(self, idx):
         prompt = self.instances[idx][0]
         completion = self.instances[idx][1]
-
         # Add EOS token
         completion += self.tokenizer.eos_token
         prompt += self.tokenizer.eos_token
 
         # Tokenize input (prompt)
+        tokenizer.padding_side = "left"
+        tokenizer.truncation_side = "left"
+
         input_ids = self.tokenizer.encode(
             prompt,
             return_tensors="pt",
-        ).squeeze()
-
-        # Padding from the left side, so that the most recent dialogue turns
-        # give context to the completion, rather than the beginning of dialogue.
-        if len(input_ids) < self.max_length:
-            padding = self.tokenizer.encode(
-                ("[PAD]" * (self.max_length - len(input_ids) - 1)), return_tensors="pt"
-            ).squeeze()
-            input_ids = torch.cat(
-                (
-                    padding,
-                    input_ids,
-                ),
-                dim=0,
-            )
-        else:
-            pass
-
+            padding="max_length",
+            truncation=True,
+            max_length=self.max_length,
+        )
+        #print(input_ids)
         # Tokenize label (completion)
+        tokenizer.padding_side = "right"
+        tokenizer.truncation_side = "right"
+        
         target_ids = self.tokenizer.encode(
             completion,
             return_tensors="pt",
             padding="max_length",
-            truncation=False,
+            truncation=True,
             max_length=self.max_length,
-        ).squeeze()
+        )
 
         # Truncation
         # Truncate the prompt from the left side.
-        if len(target_ids) > self.max_length - 1:
-            target_ids = target_ids[: self.max_length - 1]
-        if len(input_ids) > self.max_length - 1:
-            input_ids = input_ids[-self.max_length + 1 :]
+        # if len(target_ids) > self.max_length - 1:
+        #    target_ids = target_ids[: self.max_length - 1]
+        # if len(input_ids) > self.max_length - 1:
+        #    input_ids = input_ids[-self.max_length + 1 :]
 
+        # input_ids = input_ids.squeeze()
+        # target_ids = target_ids.squeeze()
         # Return .long() to prevent token IDs converting to scientific numbers
         # this shouldn't change the token IDs
+        # print(input_ids)
         return {"input_ids": input_ids.long(), "labels": target_ids.long()}
 
 
@@ -128,9 +123,9 @@ model = GPTJForCausalLM.from_pretrained(
     torch_dtype=torch.float16,
     low_cpu_mem_usage=True,
 )
-
+model.config.use_cache = False
 model.resize_token_embeddings(len(tokenizer))
-
+# samples = samples[427:428]
 # Create Dataset and Loader
 dataset = DialogueDataset(samples, tokenizer)
 data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
@@ -139,13 +134,13 @@ args = TrainingArguments(
     output_dir="results",
     num_train_epochs=20,
     logging_steps=10000,
-    per_device_train_batch_size=2,
-    warmup_steps=8000,
+    per_device_train_batch_size=32,
+    warmup_steps=500,
     weight_decay=0.01,
     logging_dir="logs",
-    save_strategy="epoch",
-    # save_steps=20000,
-    gradient_accumulation_steps=2,
+    save_strategy="steps",
+    save_steps=5000,
+    gradient_accumulation_steps=8,
     gradient_checkpointing=True,
     optim="adafactor",
 )
