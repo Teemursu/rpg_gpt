@@ -23,14 +23,17 @@ class DialogueDataset(Dataset):
     def __getitem__(self, idx):
         prompt = self.instances[idx][0]
         completion = self.instances[idx][1]
+
         # Add EOS token
         completion += self.tokenizer.eos_token
         prompt += self.tokenizer.eos_token
 
-        # Tokenize input (prompt)
+        # Padding and truncation for the input on left
+        # because we want the most "recent" dialogue/context
         tokenizer.padding_side = "left"
         tokenizer.truncation_side = "left"
 
+        # Tokenize input (prompt)
         input_ids = self.tokenizer.encode(
             prompt,
             return_tensors="pt",
@@ -38,11 +41,12 @@ class DialogueDataset(Dataset):
             truncation=True,
             max_length=self.max_length,
         )
-        #print(input_ids)
-        # Tokenize label (completion)
+
+        # Normal padding/truncation for output/labels (completion)
         tokenizer.padding_side = "right"
         tokenizer.truncation_side = "right"
-        
+
+        # Tokenize label (completion)
         target_ids = self.tokenizer.encode(
             completion,
             return_tensors="pt",
@@ -51,18 +55,6 @@ class DialogueDataset(Dataset):
             max_length=self.max_length,
         )
 
-        # Truncation
-        # Truncate the prompt from the left side.
-        # if len(target_ids) > self.max_length - 1:
-        #    target_ids = target_ids[: self.max_length - 1]
-        # if len(input_ids) > self.max_length - 1:
-        #    input_ids = input_ids[-self.max_length + 1 :]
-
-        # input_ids = input_ids.squeeze()
-        # target_ids = target_ids.squeeze()
-        # Return .long() to prevent token IDs converting to scientific numbers
-        # this shouldn't change the token IDs
-        # print(input_ids)
         return {"input_ids": input_ids.long(), "labels": target_ids.long()}
 
 
@@ -117,7 +109,7 @@ tokenizer.add_special_tokens(
     }
 )
 model = GPTJForCausalLM.from_pretrained(
-    "EleutherAI/gpt-j-6B",
+    "results/checkpoint-5000",
     cache_dir="cached",
     revision="float16",
     torch_dtype=torch.float16,
@@ -125,7 +117,7 @@ model = GPTJForCausalLM.from_pretrained(
 )
 model.config.use_cache = False
 model.resize_token_embeddings(len(tokenizer))
-# samples = samples[427:428]
+
 # Create Dataset and Loader
 dataset = DialogueDataset(samples, tokenizer)
 data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
@@ -153,6 +145,6 @@ trainer = Trainer(
 )
 
 torch.cuda.empty_cache()
-trainer.train()
+trainer.train(resume_from_checkpoint=True)
 torch.cuda.empty_cache()
 trainer.save_model()
