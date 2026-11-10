@@ -20,7 +20,7 @@ def getListOfFiles(dirName):
     return allFiles
 
 
-dfs_to_concat = getListOfFiles("data\data\\to_concat_with_speakers")
+dfs_to_concat = getListOfFiles("data/data/to_concat_with_speakers")
 
 df = pd.DataFrame()
 for df_to_concat in dfs_to_concat:

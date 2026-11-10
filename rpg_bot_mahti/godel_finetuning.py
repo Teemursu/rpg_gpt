@@ -1,6 +1,13 @@
 import json
+import os
 import torch
 from torch.utils.data import Dataset
+
+# Smoke-test overrides (added 2026; defaults reproduce the thesis run):
+#   RPG_GPT_BASE_MODEL  base model           (microsoft/GODEL-v1_1-large-seq2seq)
+#   RPG_GPT_DATA        prompt/completion jsonl (data/NLG_RPG.jsonl)
+#   RPG_GPT_EPOCHS, RPG_GPT_BATCH_SIZE, RPG_GPT_MAX_STEPS, RPG_GPT_OUTPUT_DIR
+BASE_MODEL = os.environ.get("RPG_GPT_BASE_MODEL", "microsoft/GODEL-v1_1-large-seq2seq")
 
 from transformers import (
     # GPT2Tokenizer,
@@ -35,7 +42,7 @@ class DialogueDataset(Dataset):
         # Padding and truncation for the input on left
         # because we want the most "recent" dialogue/context
         # tokenizer.padding_side = "left"
-        tokenizer.truncation_side = "left"
+        self.tokenizer.truncation_side = "left"
 
         # Tokenize input (prompt)
         input_ids = self.tokenizer.encode(
@@ -49,7 +56,7 @@ class DialogueDataset(Dataset):
 
         # Normal padding/truncation for output/labels (completion)
         # tokenizer.padding_side = "right"
-        tokenizer.truncation_side = "right"
+        self.tokenizer.truncation_side = "right"
 
         # Tokenize label (completion)
         target_ids = self.tokenizer.encode(
@@ -65,7 +72,7 @@ class DialogueDataset(Dataset):
 
 
 # Load data from file
-train_dataset = "data/NLG_RPG.jsonl"
+train_dataset = os.environ.get("RPG_GPT_DATA", "data/NLG_RPG.jsonl")
 samples = []
 with open(train_dataset, encoding="utf8") as f:
     for sample_line in f:
@@ -79,9 +86,7 @@ with open(train_dataset, encoding="utf8") as f:
 #    "EleutherAI/gpt-j-6B",
 #    cache_dir="cached",
 # )
-tokenizer = AutoTokenizer.from_pretrained(
-    "microsoft/GODEL-v1_1-large-seq2seq", cache_dir="cached"
-)
+tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, cache_dir="cached")
 
 # tokenizer.pad_token = tokenizer.eos_token
 tokenizer.add_special_tokens(
@@ -120,7 +125,7 @@ tokenizer.add_special_tokens(
 )
 # model = GPTJForCausalLM.from_pretrained(
 model = AutoModelForSeq2SeqLM.from_pretrained(
-    "microsoft/GODEL-v1_1-large-seq2seq",
+    BASE_MODEL,
     # "EleutherAI/pythia-2.8b",
     cache_dir="cached",
     # revision="float16",
@@ -140,13 +145,14 @@ data_collator = DataCollatorForSeq2Seq(
 )
 
 args = TrainingArguments(
-    output_dir="results",
-    num_train_epochs=20,
+    output_dir=os.environ.get("RPG_GPT_OUTPUT_DIR", "results"),
+    num_train_epochs=int(os.environ.get("RPG_GPT_EPOCHS", 20)),
+    max_steps=int(os.environ.get("RPG_GPT_MAX_STEPS", -1)),
     logging_steps=1000,
-    per_device_train_batch_size=128,
+    per_device_train_batch_size=int(os.environ.get("RPG_GPT_BATCH_SIZE", 128)),
     warmup_steps=100,
     weight_decay=0.01,
-    logging_dir="logs",
+    # logging_dir="logs",  # removed in transformers 5; original run logged to logs/
     save_strategy="epoch",
     # save_steps=1001,
     gradient_accumulation_steps=1,
@@ -158,7 +164,7 @@ trainer = Trainer(
     args=args,
     train_dataset=dataset,
     data_collator=data_collator,
-    tokenizer=tokenizer,
+    processing_class=tokenizer,  # was tokenizer= (removed in transformers 5)
 )
 
 torch.cuda.empty_cache()

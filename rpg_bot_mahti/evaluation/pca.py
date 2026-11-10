@@ -56,7 +56,7 @@ def calc_ttest(df1, df2):
     )
 
 
-df = pd.read_csv("evaluation/survey_data861.csv", sep=";")
+df = pd.read_csv("evaluation/survey_data861_anonymised.csv", sep=";")
 
 methods = ["game_", "ai_"]
 conversations = [

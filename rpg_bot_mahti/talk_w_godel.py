@@ -1,7 +1,10 @@
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+import os
 import re
 
-modelname = "results/checkpoint-13236"
+# Checkpoint used in the thesis experiments (stays on R:, see data/README.md);
+# RPG_GPT_CHECKPOINT overrides it (added 2026 for smoke tests).
+modelname = os.environ.get("RPG_GPT_CHECKPOINT", "results/checkpoint-13236")
 tokenizer = AutoTokenizer.from_pretrained(modelname)
 model = AutoModelForSeq2SeqLM.from_pretrained(modelname)
 
@@ -26,7 +29,10 @@ print()
 dialogue = dialog
 # eos_token = tokenizer.eos_token
 for i in range(50):
-    player_input = input("Player: ")
+    try:
+        player_input = input("Player: ")
+    except EOFError:  # end of piped input
+        break
     player_input = f"Player: {player_input}"
     # print(tokenizer(player_input, return_tensors="pt"))
     # print(tokenizer("Player: ", return_tensors="pt"))

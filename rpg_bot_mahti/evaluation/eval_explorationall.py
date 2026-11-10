@@ -35,6 +35,10 @@ def calc_ttest(df1, df2):
         df2 = df2.fillna(df2.median())
         df1 = df1.fillna(df1.median())
         ttest = ttest_ind(df1, df2)
+    # pandas >= 2 no longer silently drops the text "variable" column of the
+    # melted frame in mean()/std(); keep only the values (2026 fix)
+    if isinstance(df1, pd.DataFrame):
+        df1, df2 = df1["value"], df2["value"]
     print("/" * 15)
     print("df info")
     print(df1.info())
@@ -71,7 +75,7 @@ def calc_ttest(df1, df2):
     return result
 
 
-og_df = pd.read_csv("evaluation/survey_data861.csv", sep=";")
+og_df = pd.read_csv("evaluation/survey_data861_anonymised.csv", sep=";")
 
 
 methods = ["game_", "ai_"]

@@ -15,7 +15,7 @@ from factor_analyzer import FactorAnalyzer
 from sklearn.decomposition import FactorAnalysis
 import matplotlib.pyplot as plt
 
-og_df = pd.read_csv("evaluation/survey_data861.csv", sep=";")
+og_df = pd.read_csv("evaluation/survey_data861_anonymised.csv", sep=";")
 
 df = og_df.filter(regex=r"game_|ai_")
 print(df.info)

@@ -97,7 +97,7 @@ def save_to_jsonl(instances, file_path, batch_size=10000):
             )
 
 
-df = pd.read_csv("data\\NLG_clean_with_speakers.csv", sep="\t")
+df = pd.read_csv("data/NLG_clean_with_speakers.csv", sep="\t")
 df.drop("game", axis=1, inplace=True)
 df.drop("Unnamed: 0", axis=1, inplace=True)
 

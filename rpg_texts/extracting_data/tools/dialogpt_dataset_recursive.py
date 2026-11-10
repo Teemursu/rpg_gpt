@@ -284,7 +284,7 @@ def get_context_row(convrsation, filename):
     # #print(old_filename.replace("\\", " ").split()[-1])
     # #print(to_save_filename)
     df_to_save.to_csv(
-        "D:\Code\Data\\rpg_texts\data\data\\to_concat_with_speakers\\{}_with_speakers.csv".format(
+        "data/data/to_concat_with_speakers/{}_with_speakers.csv".format(
             to_save_filename
         ),
         encoding="utf-8",
@@ -299,7 +299,7 @@ def get_context_row(convrsation, filename):
 # threading.stack_size(2**27)  # new thread will get stack of such size
 
 df = pd.read_csv(
-    "data\\persuasion_dataset_w_quotes_and_squarebrackets_and_more_skills_with_speakers.csv",
+    "data/persuasion_dataset_w_quotes_and_squarebrackets_and_more_skills_with_speakers.csv",
     encoding="utf-8",
     sep="\t",
 )
@@ -324,7 +324,7 @@ for filename in all_filenames:
     basename = remove_folder_path_from_filename(filename)
     # print(basename)
     glob_check = glob.glob(
-        "D:\\Code\\Data\\rpg_texts\\data\\data\\to_concat_with_speakers\\{}_with_speakers.csv".format(
+        "data/data/to_concat_with_speakers/{}_with_speakers.csv".format(
             os.path.basename(basename)
         )
     )

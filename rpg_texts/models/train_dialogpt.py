@@ -1,4 +1,4 @@
-from transformers import AutoModelWithLMHead, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import pandas as pd
 
@@ -26,16 +26,14 @@ from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
-from tqdm.notebook import tqdm, trange
+from tqdm.auto import tqdm, trange
 
 from pathlib import Path
 
 from transformers import (
-    MODEL_WITH_LM_HEAD_MAPPING,
-    WEIGHTS_NAME,
-    AdamW,
+    MODEL_FOR_CAUSAL_LM_MAPPING,
     AutoConfig,
-    AutoModelWithLMHead,
+    AutoModelForCausalLM,
     AutoTokenizer,
     PreTrainedModel,
     PreTrainedTokenizer,
@@ -51,9 +49,14 @@ except ImportError:
 # Configs
 logger = logging.getLogger(__name__)
 
-MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
+from torch.optim import AdamW  # transformers.AdamW was removed
+from transformers.utils import WEIGHTS_NAME
+
+MODEL_CONFIG_CLASSES = list(MODEL_FOR_CAUSAL_LM_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
-df = "data/nlg_data_10_turns_all_data.csv"
+# Smoke-test overrides (added 2026; defaults reproduce the original run):
+# DIALOGPT_DATA, DIALOGPT_MODEL, DIALOGPT_OUTPUT_DIR, DIALOGPT_EPOCHS, DIALOGPT_MAX_STEPS
+df = os.environ.get("DIALOGPT_DATA", "data/nlg_data_10_turns_all_data.csv")
 df = pd.read_csv(df, sep="\t")
 
 """ FILTER BY GAME """
@@ -102,11 +105,12 @@ trn_df.head()
 # Args to allow for easy convertion of python script to notebook
 class Args:
     def __init__(self):
-        self.output_dir = "output-large"
+        model_name = os.environ.get("DIALOGPT_MODEL", "microsoft/DialoGPT-large")
+        self.output_dir = os.environ.get("DIALOGPT_OUTPUT_DIR", "output-large")
         self.model_type = "gpt2"
-        self.model_name_or_path = "microsoft/DialoGPT-large"
-        self.config_name = "microsoft/DialoGPT-large"
-        self.tokenizer_name = "microsoft/DialoGPT-large"
+        self.model_name_or_path = model_name
+        self.config_name = model_name
+        self.tokenizer_name = model_name
         self.cache_dir = "cached"
         self.block_size = 512
         self.do_train = True
@@ -119,8 +123,8 @@ class Args:
         self.weight_decay = 0.0
         self.adam_epsilon = 1e-8
         self.max_grad_norm = 1.0
-        self.num_train_epochs = 5
-        self.max_steps = -1
+        self.num_train_epochs = int(os.environ.get("DIALOGPT_EPOCHS", 5))
+        self.max_steps = int(os.environ.get("DIALOGPT_MAX_STEPS", -1))
         self.warmup_steps = 0
         self.logging_steps = 1000
         self.save_steps = 3500
@@ -255,7 +259,7 @@ def train(
     args.train_batch_size = args.per_gpu_train_batch_size * max(1, args.n_gpu)
 
     def collate(examples: List[torch.Tensor]):
-        if tokenizer._pad_token is None:
+        if tokenizer.pad_token is None:  # was private _pad_token
             return pad_sequence(examples, batch_first=True)
         return pad_sequence(
             examples, batch_first=True, padding_value=tokenizer.pad_token_id
@@ -550,7 +554,7 @@ def evaluate(
     # Note that DistributedSampler samples randomly
 
     def collate(examples: List[torch.Tensor]):
-        if tokenizer._pad_token is None:
+        if tokenizer.pad_token is None:  # was private _pad_token
             return pad_sequence(examples, batch_first=True)
         return pad_sequence(
             examples, batch_first=True, padding_value=tokenizer.pad_token_id
@@ -632,7 +636,7 @@ def main(df_trn, df_val):
         )
 
     # Setup CUDA, GPU & distributed training
-    device = torch.device("cuda")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # CPU fallback (2026)
     args.n_gpu = torch.cuda.device_count()
     # torch.cuda.set_enabled_lms(True)
     args.device = device
@@ -689,7 +693,7 @@ def main(df_trn, df_val):
         }
     )
 
-    model = AutoModelWithLMHead.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         args.model_name_or_path,
         from_tf=False,
         config=config,
@@ -726,7 +730,7 @@ def main(df_trn, df_val):
         torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
 
         # Load a trained model and vocabulary that you have fine-tuned
-        model = AutoModelWithLMHead.from_pretrained(args.output_dir)
+        model = AutoModelForCausalLM.from_pretrained(args.output_dir)
         tokenizer = AutoTokenizer.from_pretrained(args.output_dir)
         model.to(args.device)
 
@@ -751,7 +755,7 @@ def main(df_trn, df_val):
                 checkpoint.split("/")[-1] if checkpoint.find("checkpoint") != -1 else ""
             )
 
-            model = AutoModelWithLMHead.from_pretrained(checkpoint)
+            model = AutoModelForCausalLM.from_pretrained(checkpoint)
             model.to(args.device)
             result = evaluate(args, model, tokenizer, df_trn, df_val, prefix=prefix)
             result = dict((k + "_{}".format(global_step), v) for k, v in result.items())
