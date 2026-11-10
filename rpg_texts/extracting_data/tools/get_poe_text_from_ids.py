@@ -28,7 +28,7 @@ def getListOfFiles(dirName):
     return allFiles
 
 
-games = ["poe2"]  # "poe1", "poe2", "tyranny"]
+games = ["poe1"]  # "poe1", "poe2", "tyranny"]
 langs = ["en"]  # "de", "es", "fr", "it", "pl", "ru", "pt", "zh"]
 
 for game in games:
@@ -100,4 +100,4 @@ for game in games:
                 # print(file, "not found")
                 pass
 
-    df.to_csv("data/" + game + "_dataset.csv", sep="\t")
+    df.to_csv("data/" + game + "_dataset_w_speaker.csv", sep="\t")

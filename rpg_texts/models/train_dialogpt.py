@@ -20,6 +20,7 @@ import pandas as pd
 import numpy as np
 import torch
 
+from pprint import pprint
 from sklearn.model_selection import train_test_split
 
 from torch.nn.utils.rnn import pad_sequence
@@ -52,30 +53,35 @@ logger = logging.getLogger(__name__)
 
 MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
-# kotor_data = "/content/drive/MyDrive/pers_generation/NLG_dataset_without_terminal.csv"
-# nwn_data = "/content/drive/MyDrive/pers_generation/NLG_dataset_NWN.csv"
-# kotor_df = pd.read_csv(kotor_data, sep="\t")
-# nwn_df = pd.read_csv(nwn_data, sep="\t")
-# df = pd.concat([kotor_df, nwn_df], ignore_index=True)
-df = "data/NLG_clean.csv"
+df = "data/nlg_data_10_turns_all_data.csv"
 df = pd.read_csv(df, sep="\t")
-df.drop("Unnamed: 0.1", axis=1, inplace=True)
+
+""" FILTER BY GAME """
+sw_df = df.loc[df["game"].isin(["KotOR 1", "KotOR 2"])]
+fantasy_df = df.loc[~df["game"].isin(["KotOR 1", "KotOR 2"])]
+poe_df = df.loc[df["game"].isin(["poe1", "poe2"])]
+""" FILTER BY GAME """
+
+#df = df
+print("THIS IS STAR WARS:")
+#print(sw_df)
+# df.drop("Unnamed: 0.1", axis=1, inplace=True)
 df.drop("Unnamed: 0", axis=1, inplace=True)
 # df.drop("Unnamed: 1", axis=1, inplace=True)
 df = df.drop_duplicates()
 df.drop("game", axis=1, inplace=True)
 print(df.shape)
-df = df[df.columns[: list(df.columns).index("context/1") + 1]]
-print(df.shape)
-# df = df.drop_duplicates(subset="response")
-# df = df.drop_duplicates(subset="context/0")
-# df = df.drop_duplicates(subset="context/1")
-df = df.drop_duplicates()
+df = df[df.columns[: list(df.columns).index("context/3") + 1]]
+df = df.drop_duplicates(subset="response")
+df = df.drop_duplicates(subset="context/0")
+df = df.drop_duplicates(subset="context/1")
+df = df.drop_duplicates(subset="context/2")
+df = df.drop_duplicates(subset="context/3")
 
 
 df = df.dropna()
+pd.set_option("display.max_columns", None)
 print(df.shape)
-# df = df.sample(n=5000)
 print(df.head(10))
 count = []
 for columname in df.keys():
@@ -98,9 +104,9 @@ class Args:
     def __init__(self):
         self.output_dir = "output-large"
         self.model_type = "gpt2"
-        self.model_name_or_path = "EleutherAI/gpt-neo-2.7B"
-        self.config_name = "EleutherAI/gpt-neo-2.7B"
-        self.tokenizer_name = "EleutherAI/gpt-neo-2.7B"
+        self.model_name_or_path = "microsoft/DialoGPT-large"
+        self.config_name = "microsoft/DialoGPT-large"
+        self.tokenizer_name = "microsoft/DialoGPT-large"
         self.cache_dir = "cached"
         self.block_size = 512
         self.do_train = True
@@ -113,7 +119,7 @@ class Args:
         self.weight_decay = 0.0
         self.adam_epsilon = 1e-8
         self.max_grad_norm = 1.0
-        self.num_train_epochs = 3
+        self.num_train_epochs = 5
         self.max_steps = -1
         self.warmup_steps = 0
         self.logging_steps = 1000
@@ -286,7 +292,6 @@ def train(
         model.module if hasattr(model, "module") else model
     )  # Take care of distributed/parallel training
     model.resize_token_embeddings(len(tokenizer))
-    print(tokenizer.tokenize("<|forcepersuade|> You will let me try again."))
     # add_special_tokens_(model, tokenizer)
 
     # Prepare optimizer and schedule (linear warmup and decay)

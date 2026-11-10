@@ -29,7 +29,6 @@ def getListOfFiles(dirName):
 def get_node_ids(elem, file, game):
     try:
         node_id = elem["NodeID"]
-
     except TypeError:
         # print(elem)
         return None
@@ -40,6 +39,10 @@ def get_node_ids(elem, file, game):
     except TypeError:
         return None
 
+    try:
+        speaker = elem["SpeakerGuid"]
+    except KeyError:
+        speaker = ""
     # print("NODE ID:",node_id)
     from_idx = []
     to_idx = []
@@ -130,7 +133,7 @@ def get_node_ids(elem, file, game):
             "filename": file,
             "id": node_id,
             "sid": "",
-            "speaker": "",
+            "speaker": speaker,
             "replies": to_idx,
             "entries": from_idx,
             "persuasion": persuasion,

@@ -20,12 +20,19 @@ def getListOfFiles(dirName):
     return allFiles
 
 
-dfs_to_concat = getListOfFiles("data/to_concat")
+dfs_to_concat = getListOfFiles("data\data\\to_concat_with_speakers")
 
 df = pd.DataFrame()
 for df_to_concat in dfs_to_concat:
     df_to_concat = pd.read_csv(df_to_concat, sep="\t")
     df = pd.concat([df, df_to_concat], ignore_index=True)
-df.drop("Unnamed: 0.1", axis=1, inplace=True)
-df.drop("Unnamed: 0", axis=1, inplace=True)
-df.to_csv("NLG_clean.csv", sep="\t")
+try:
+    df.drop("Unnamed: 0.1", axis=1, inplace=True)
+except KeyError:
+    pass
+try:
+    df.drop("Unnamed: 0", axis=1, inplace=True)
+except KeyError:
+    pass
+
+df.to_csv("NLG_clean_with_speakers.csv", sep="\t")

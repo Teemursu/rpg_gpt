@@ -66,6 +66,7 @@ def rm_unnecessary_columns(df):
         "id",
         "sid",
         "replies",
+        "speaker",
         # "entries",
         "persuasion",
         "en",
@@ -146,11 +147,11 @@ def get_dialogue_only(source):
     return source
 
 
-kotor_nwn_df = pd.read_csv("persuasion_dialogue_dataset.csv")
+kotor_nwn_df = pd.read_csv("data\persuasion_dialogue_dataset.csv")
 kotor_nwn_df = kotor_nwn_df.rename(columns={"is_persuasion": "persuasion"})
-poe2_df = pd.read_csv("data\poe2_dataset.csv", sep="\t")
-poe1_df = pd.read_csv("data\poe1_dataset.csv", sep="\t")
-tyranny_df = pd.read_csv("data\\tyranny_dataset.csv", sep="\t")
+poe2_df = pd.read_csv("data\\poe2_dataset_with_speakers.csv", sep="\t")
+poe1_df = pd.read_csv("data\\poe1_dataset_with_speakers.csv", sep="\t")
+tyranny_df = pd.read_csv("data\\tyranny_dataset_with_speakers.csv", sep="\t")
 
 df_list = [kotor_nwn_df, poe2_df, poe1_df, tyranny_df]
 df_list = [rm_unnecessary_columns(df) for df in df_list]
@@ -173,8 +174,9 @@ print(rows)
 print()
 print(df["persuasion"].value_counts())
 df = df.dropna(subset=["en"])
+print(df.head(1))
 df.to_csv(
-    "persuasion_dataset_w_quotes_and_squarebrackets_and_more_skills.csv",
+    "persuasion_dataset_w_quotes_and_squarebrackets_and_more_skills_with_speakers.csv",
     encoding="utf-8",
     sep="\t",
 )

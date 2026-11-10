@@ -3,15 +3,20 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-df = pd.read_csv("data/NLG_clean.csv", sep="\t")
-print(df.shape)
-notnull = df.count(axis=0)
-print(notnull)
-print()
-dfs = np.array_split(df, 6, axis=1)
-df = pd.concat(dfs, axis=0, ignore_index=True)
-print(df.shape)
+df = pd.read_csv("nlg_data_10_turns_all_data.csv", sep="\t")
+df = df.drop_duplicates()
 
-notnull = df.count(axis=0)
-print(notnull)
-notnull.to_csv("counts_with6splits.csv")
+print(df.shape)
+df = df[df.columns[: list(df.columns).index("context/1") + 3]]
+print(df.shape)
+df = df.drop_duplicates(subset="context/0")
+print(df.shape)
+df = df.drop_duplicates(subset="context/1")
+print(df.shape)
+df = df.drop_duplicates(subset="context/2")
+print(df.shape)
+df = df.drop_duplicates(subset="context/3")
+print(df.shape)
+df = df.drop_duplicates(subset="response")
+df = df.dropna()
+print(df.shape)

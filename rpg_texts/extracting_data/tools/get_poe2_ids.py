@@ -29,6 +29,7 @@ def getListOfFiles(dirName):
 def get_node_ids(elem, file):
     # pprint(elem)
     node_id = elem["NodeID"]
+
     # pprint(elem)
     # print("NODE ID:",node_id)
     from_idx = []
@@ -37,9 +38,18 @@ def get_node_ids(elem, file):
         for link in elem["Links"]:
             from_idx.append(link["FromNodeID"])
             to_idx.append(link["ToNodeID"])
+            pprint(elem)
+        try:
+            speaker = elem["SpeakerGuid"]
+            listener = elem["ListenerGuid"]
+        except KeyError:
+            speaker = ""
+            listener = ""
     if len(elem["Links"]) == 0:
         from_idx.append("no_links")
         to_idx.append("no_links")
+        speaker = ""
+        listener = ""
 
     skill_req = []
     skill_diff = []
@@ -62,7 +72,8 @@ def get_node_ids(elem, file):
         "filename": file,
         "id": node_id,
         "sid": "",
-        "speaker": "",
+        "speaker": speaker,
+        "listener": listener,
         "replies": to_idx,
         "entries": from_idx,
         "persuasion": skill_req,

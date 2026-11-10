@@ -10,12 +10,14 @@ from transformers import (
     PreTrainedTokenizer,
     get_linear_schedule_with_warmup,
 )
+from transformers.utils import logging
+logging.set_verbosity_info()
 
 tokenizer = AutoTokenizer.from_pretrained(
-    "D:/Code/Repositories/rpg_bot/models/95K_5rows (maybe)"
+    "D:/Code\Repositories/rpg_bot/models/new_models", padding_side="left"
 )
 model = AutoModelWithLMHead.from_pretrained(
-    "D:/Code/Repositories/rpg_bot/models/95K_5rows (maybe)"
+    "D:/Code/Repositories/rpg_bot/models/new_models"
 )
 
 # Let's chat for 5 lines
@@ -35,7 +37,7 @@ for step in range(5):
     # generated a response while limiting the total chat history to 1000 tokens,
     chat_history_ids = model.generate(
         bot_input_ids,
-        model_max_length=10000,
+        # model_max_length=10000,
         pad_token_id=tokenizer.eos_token_id,
         no_repeat_ngram_size=3,
         do_sample=True,
