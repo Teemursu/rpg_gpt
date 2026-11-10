@@ -1,0 +1,21 @@
+# Python 3.12, CPU-only torch:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   pip install -r requirements.txt
+# Versions verified with smoke_test/run_smoke_test.py (2026-11).
+torch==2.15.0
+transformers==5.22.2
+accelerate==1.15.0
+sentencepiece==0.2.3
+tensorboard==2.21.0
+tqdm==4.70.1
+numpy==2.5.4
+pandas==3.1.1
+scipy==1.18.1
+# factor_analyzer 0.5.1 calls check_array(force_all_finite=...), removed in scikit-learn 1.6
+scikit-learn==1.5.2
+factor_analyzer==0.5.1
+matplotlib==3.11.2
+seaborn==0.13.2
+# extraction scripts (need the original game files, see data/README.md)
+xmltodict==1.0.4
+lxml==6.1.3

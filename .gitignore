@@ -1,0 +1,33 @@
+# environments / caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+
+# data, models and run artefacts stay outside git (see data/README.md)
+data/*
+!data/README.md
+cached/
+results/
+output-*/
+logs/
+logfiles/
+mlruns/
+runs/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.jsonl
+NLG_*.csv
+nlg_data_*.csv
+*_with_speakers.csv
+
+# raw survey exports contain IP addresses and locations
+**/evaluation/Dialogue*survey*.csv
+**/evaluation/survey_data.csv
+**/evaluation/survey_data1.csv
+**/evaluation/survey_data861.csv
+**/evaluation/survey_results_medianfilled.*
