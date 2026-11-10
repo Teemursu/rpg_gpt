@@ -1,0 +1,121 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) csc-tools
+NOTE: This module uses Singularity. Some commands execute inside the container
+(e.g. python3, pip3).
+
+/usr/local/lib64/python3.9/site-packages/torch/distributed/distributed_c10d.py:429: UserWarning: torch.distributed.distributed_c10d._get_global_rank is deprecated please use torch.distributed.distributed_c10d.get_global_rank instead
+  warnings.warn(
+/usr/local/lib64/python3.9/site-packages/torch/distributed/distributed_c10d.py:429: UserWarning: torch.distributed.distributed_c10d._get_global_rank is deprecated please use torch.distributed.distributed_c10d.get_global_rank instead
+  warnings.warn(
+/usr/local/lib64/python3.9/site-packages/torch/distributed/distributed_c10d.py:429: UserWarning: torch.distributed.distributed_c10d._get_global_rank is deprecated please use torch.distributed.distributed_c10d.get_global_rank instead
+  warnings.warn(
+/usr/local/lib64/python3.9/site-packages/torch/distributed/distributed_c10d.py:429: UserWarning: torch.distributed.distributed_c10d._get_global_rank is deprecated please use torch.distributed.distributed_c10d.get_global_rank instead
+  warnings.warn(
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/scratch/project_2001403/poyhnent/multigpu_gptj.py", line 158, in <module>
+  File "/scratch/project_2001403/poyhnent/multigpu_gptj.py", line 158, in <module>
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/scratch/project_2001403/poyhnent/multigpu_gptj.py", line 158, in <module>
+  File "/scratch/project_2001403/poyhnent/multigpu_gptj.py", line 158, in <module>
+        trainer.train()trainer.train()
+
+  File "/usr/local/lib/python3.9/site-packages/transformers/trainer.py", line 1527, in train
+  File "/usr/local/lib/python3.9/site-packages/transformers/trainer.py", line 1527, in train
+    trainer.train()
+  File "/usr/local/lib/python3.9/site-packages/transformers/trainer.py", line 1527, in train
+    trainer.train()
+  File "/usr/local/lib/python3.9/site-packages/transformers/trainer.py", line 1527, in train
+    return inner_training_loop(
+      File "/usr/local/lib/python3.9/site-packages/transformers/trainer.py", line 1596, in _inner_training_loop
+return inner_training_loop(    
+return inner_training_loop(
+  File "/usr/local/lib/python3.9/site-packages/transformers/trainer.py", line 1596, in _inner_training_loop
+  File "/usr/local/lib/python3.9/site-packages/transformers/trainer.py", line 1596, in _inner_training_loop
+    return inner_training_loop(
+  File "/usr/local/lib/python3.9/site-packages/transformers/trainer.py", line 1596, in _inner_training_loop
+    deepspeed_engine, optimizer, lr_scheduler = deepspeed_init(    
+deepspeed_engine, optimizer, lr_scheduler = deepspeed_init(      File "/usr/local/lib/python3.9/site-packages/transformers/deepspeed.py", line 344, in deepspeed_init
+
+deepspeed_engine, optimizer, lr_scheduler = deepspeed_init(  File "/usr/local/lib/python3.9/site-packages/transformers/deepspeed.py", line 344, in deepspeed_init
+
+  File "/usr/local/lib/python3.9/site-packages/transformers/deepspeed.py", line 344, in deepspeed_init
+    deepspeed_engine, optimizer, lr_scheduler = deepspeed_init(
+  File "/usr/local/lib/python3.9/site-packages/transformers/deepspeed.py", line 344, in deepspeed_init
+        deepspeed_engine, optimizer, _, lr_scheduler = deepspeed.initialize(**kwargs)deepspeed_engine, optimizer, _, lr_scheduler = deepspeed.initialize(**kwargs)    
+
+deepspeed_engine, optimizer, _, lr_scheduler = deepspeed.initialize(**kwargs)    
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/__init__.py", line 125, in initialize
+deepspeed_engine, optimizer, _, lr_scheduler = deepspeed.initialize(**kwargs)  File "/usr/local/lib64/python3.9/site-packages/deepspeed/__init__.py", line 125, in initialize
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/__init__.py", line 125, in initialize
+
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/__init__.py", line 125, in initialize
+                engine = DeepSpeedEngine(args=args,engine = DeepSpeedEngine(args=args,engine = DeepSpeedEngine(args=args,
+engine = DeepSpeedEngine(args=args,
+
+
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 290, in __init__
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 290, in __init__
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 290, in __init__
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 290, in __init__
+            self._configure_distributed_model(model)self._configure_distributed_model(model)self._configure_distributed_model(model)
+
+
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 1106, in _configure_distributed_model
+      File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 1106, in _configure_distributed_model
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 1106, in _configure_distributed_model
+self._configure_distributed_model(model)
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 1106, in _configure_distributed_model
+    self._broadcast_model()
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 1021, in _broadcast_model
+        self._broadcast_model()self._broadcast_model()
+
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 1021, in _broadcast_model
+      File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 1021, in _broadcast_model
+self._broadcast_model()
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/runtime/engine.py", line 1021, in _broadcast_model
+    dist.broadcast(p,
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/comm.py", line 126, in log_wrapper
+        dist.broadcast(p,dist.broadcast(p,
+
+      File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/comm.py", line 126, in log_wrapper
+dist.broadcast(p,  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/comm.py", line 126, in log_wrapper
+
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/comm.py", line 126, in log_wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/comm.py", line 231, in broadcast
+    return func(*args, **kwargs)    
+return func(*args, **kwargs)      File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/comm.py", line 231, in broadcast
+
+return func(*args, **kwargs)
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/comm.py", line 231, in broadcast
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/comm.py", line 231, in broadcast
+    return cdb.broadcast(tensor=tensor, src=src, group=group, async_op=async_op)
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/torch.py", line 70, in broadcast
+    return cdb.broadcast(tensor=tensor, src=src, group=group, async_op=async_op)
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/torch.py", line 70, in broadcast
+        return cdb.broadcast(tensor=tensor, src=src, group=group, async_op=async_op)return cdb.broadcast(tensor=tensor, src=src, group=group, async_op=async_op)
+
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/torch.py", line 70, in broadcast
+  File "/usr/local/lib64/python3.9/site-packages/deepspeed/comm/torch.py", line 70, in broadcast
+            return torch.distributed.broadcast(tensor=tensor,    return torch.distributed.broadcast(tensor=tensor,return torch.distributed.broadcast(tensor=tensor,
+return torch.distributed.broadcast(tensor=tensor,
+
+
+  File "/usr/local/lib64/python3.9/site-packages/torch/distributed/distributed_c10d.py", line 1404, in broadcast
+  File "/usr/local/lib64/python3.9/site-packages/torch/distributed/distributed_c10d.py", line 1404, in broadcast
+  File "/usr/local/lib64/python3.9/site-packages/torch/distributed/distributed_c10d.py", line 1404, in broadcast
+  File "/usr/local/lib64/python3.9/site-packages/torch/distributed/distributed_c10d.py", line 1404, in broadcast
+        work = group.broadcast([tensor], opts)    work = group.broadcast([tensor], opts)    
+
+work = group.broadcast([tensor], opts)work = group.broadcast([tensor], opts)
+
+RuntimeErrorRuntimeError: RuntimeError: Tensors must be contiguousRuntimeError: Tensors must be contiguous
+Tensors must be contiguous
+: 
+Tensors must be contiguous
+srun: error: g1101: task 0: Exited with exit code 1
+srun: launch/slurm: _step_signal: Terminating StepId=1959287.1

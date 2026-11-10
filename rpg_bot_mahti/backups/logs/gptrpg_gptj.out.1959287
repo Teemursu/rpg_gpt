@@ -1,0 +1,23 @@
+Requirement already satisfied: accelerate in /users/poyhnent/.local/lib/python3.9/site-packages (0.15.0)
+Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.9/site-packages (from accelerate) (21.3)
+Requirement already satisfied: numpy>=1.17 in /usr/local/lib64/python3.9/site-packages (from accelerate) (1.23.5)
+Requirement already satisfied: pyyaml in /usr/local/lib64/python3.9/site-packages (from accelerate) (6.0)
+Requirement already satisfied: psutil in /usr/local/lib64/python3.9/site-packages (from accelerate) (5.9.4)
+Requirement already satisfied: torch>=1.4.0 in /usr/local/lib64/python3.9/site-packages (from accelerate) (1.13.0+cu116)
+Requirement already satisfied: pyparsing!=3.0.5,>=2.0.2 in /usr/local/lib/python3.9/site-packages (from packaging>=20.0->accelerate) (3.0.9)
+Requirement already satisfied: typing-extensions in /usr/local/lib/python3.9/site-packages (from torch>=1.4.0->accelerate) (4.4.0)
+[2023-02-01 03:12:50,894] [WARNING] [runner.py:179:fetch_hostfile] Unable to find hostfile, will proceed with training with local resources only.
+Detected CUDA_VISIBLE_DEVICES=0,1,2,3: setting --include=localhost:0,1,2,3
+[2023-02-01 03:12:50,927] [INFO] [runner.py:508:main] cmd = /usr/bin/python3.9 -u -m deepspeed.launcher.launch --world_info=eyJsb2NhbGhvc3QiOiBbMCwgMSwgMiwgM119 --master_addr=127.0.0.1 --master_port=29500 multigpu_gptj.py
+[2023-02-01 03:12:53,017] [INFO] [launch.py:142:main] WORLD INFO DICT: {'localhost': [0, 1, 2, 3]}
+[2023-02-01 03:12:53,017] [INFO] [launch.py:148:main] nnodes=1, num_local_procs=4, node_rank=0
+[2023-02-01 03:12:53,017] [INFO] [launch.py:161:main] global_rank_mapping=defaultdict(<class 'list'>, {'localhost': [0, 1, 2, 3]})
+[2023-02-01 03:12:53,017] [INFO] [launch.py:162:main] dist_world_size=4
+[2023-02-01 03:12:53,017] [INFO] [launch.py:164:main] Setting CUDA_VISIBLE_DEVICES=0,1,2,3
+[2023-02-01 03:12:58,396] [INFO] [comm.py:633:init_distributed] Initializing TorchBackend in DeepSpeed with backend nccl
+[2023-02-01 03:13:34,763] [INFO] [logging.py:68:log_dist] [Rank 0] DeepSpeed info: version=0.7.6, git-hash=unknown, git-branch=unknown
+[2023-02-01 03:13:46,111] [INFO] [launch.py:318:sigkill_handler] Killing subprocess 4003165
+[2023-02-01 03:13:46,112] [INFO] [launch.py:318:sigkill_handler] Killing subprocess 4003166
+[2023-02-01 03:13:46,606] [INFO] [launch.py:318:sigkill_handler] Killing subprocess 4003167
+[2023-02-01 03:13:46,643] [INFO] [launch.py:318:sigkill_handler] Killing subprocess 4003168
+[2023-02-01 03:13:46,681] [ERROR] [launch.py:324:sigkill_handler] ['/usr/bin/python3.9', '-u', 'multigpu_gptj.py', '--local_rank=3'] exits with return code = 1

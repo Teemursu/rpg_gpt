@@ -1,28 +1,30 @@
-import pandas as pd
+import json
 import re
 
 
-def preprocess_df(df):
-    # Remove any row that contains a cell that contains something other than a string
-    # df = df[df.applymap(lambda x: isinstance(x, str)).all(1)]
-    # df = df.drop_duplicates()
-    # df.drop("game", axis=1, inplace=True)
-    # df = df[df.columns[: list(df.columns).index("context/3") + 1]]
-    # df = df[df.applymap(lambda x: isinstance(x, str)).all(1)]
-    # remove rows with consecutive capital letters e.g. SYSTEM CONSOLE
-    df = df[
-        ~df.applymap(lambda x: type(x) == str and bool(re.match(r"\b[A-Z]{4,}\b", x)))
-    ]
+def clean_instance(instance):
+    prompt = instance["prompt"]
+    completion = instance["completion"]
 
-    return df
+    if "nan" in prompt or "nan" in completion:
+        return False
+
+    if re.search(r"[A-Z]{4,}", prompt) or re.search(r"[A-Z]{4,}", completion):
+        return False
+
+    return True
 
 
-def read_and_preprocess_csv(filepath):
-    df = pd.read_csv(filepath, sep="\t")
-    # df = df.dropna()
-    df = preprocess_df(df)
-    df.to_csv("NLG_RPG.csv", index=False)
+def clean_data(input_file, output_file):
+    with open(input_file, "r") as f_in:
+        with open(output_file, "w") as f_out:
+            for line in f_in:
+                instance = json.loads(line)
+                if clean_instance(instance):
+                    f_out.write(json.dumps(instance) + "\n")
 
 
-# Example usage
-read_and_preprocess_csv("data\\NLG_clean_with_speakers.csv")
+input_file = "data/NLG_RPG.jsonl"
+output_file = "data/NLG_RPG_cleaned.jsonl"
+
+clean_data(input_file, output_file)

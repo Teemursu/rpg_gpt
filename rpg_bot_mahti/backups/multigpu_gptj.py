@@ -1,14 +1,20 @@
-import json
 import torch
-from torch.utils.data import Dataset
-
 from transformers import (
-    GPT2Tokenizer,
-    GPTJForCausalLM,
+    AutoTokenizer,
+    GPTNeoXForCausalLM,
     TrainingArguments,
     Trainer,
     DataCollatorForLanguageModeling,
 )
+import json
+from torch.utils.data import Dataset, DataLoader
+import argparse
+
+import deepspeed
+
+deepspeed.init_distributed()
+# torch.cuda.set_device(torch.cuda.current_device())
+torch.cuda.manual_seed_all(42)
 
 
 class DialogueDataset(Dataset):
@@ -38,9 +44,10 @@ class DialogueDataset(Dataset):
             prompt,
             return_tensors="pt",
             padding="max_length",
+            # padding=True,
             truncation=True,
             max_length=self.max_length,
-        )
+        ).squeeze(0)
 
         # Normal padding/truncation for output/labels (completion)
         tokenizer.padding_side = "right"
@@ -53,8 +60,9 @@ class DialogueDataset(Dataset):
             padding="max_length",
             truncation=True,
             max_length=self.max_length,
-        )
-
+        ).squeeze(0)
+        print("input:", prompt, input_ids)
+        print("output:", completion, target_ids)
         return {"input_ids": input_ids.long(), "labels": target_ids.long()}
 
 
@@ -68,19 +76,23 @@ with open(train_dataset, encoding="utf8") as f:
         completion = sample["completion"]
         samples.append((prompt, completion))
 
-# Load tokenizer
-tokenizer = GPT2Tokenizer.from_pretrained(
-    "EleutherAI/gpt-j-6B",
-    cache_dir="cached",
+# Load tokenizer and model
+tokenizer = AutoTokenizer.from_pretrained(
+    "EleutherAI/pythia-2.8b-deduped", cache_dir="cached"
 )
+# return_token_type_ids=False
+# mlm=False,
+# max_length=100,
+# truncation=True,
+# padding="max_length",
+# bos_token="<startoftext>",
+# eos_token="<endoftext>",
 
 tokenizer.add_special_tokens(
     {
         "sep_token": "[SEP]",
         "pad_token": "[PAD]",
         "additional_special_tokens": [
-            "NPC:",
-            "Player:",
             "<|persuade|>",
             "<|computer|>",
             "<|forcepersuade|>",
@@ -108,21 +120,24 @@ tokenizer.add_special_tokens(
         ],
     }
 )
-model = GPTJForCausalLM.from_pretrained(
-    "results/checkpoint-5000",
+model = GPTNeoXForCausalLM.from_pretrained(
+    "EleutherAI/pythia-2.8b-deduped",
+    # "EleutherAI/pythia-2.8b",
     cache_dir="cached",
-    revision="float16",
-    torch_dtype=torch.float16,
-    low_cpu_mem_usage=True,
+    # revision="float16",
+    # torch_dtype=torch.float16,
+    # low_cpu_mem_usage=True,
 )
+# )
 model.config.use_cache = False
 model.resize_token_embeddings(len(tokenizer))
-
-# Create Dataset and Loader
+# model.to(torch.float16)
+# Define the data loader
 dataset = DialogueDataset(samples, tokenizer)
-data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
-
-args = TrainingArguments(
+# train_sampler = DistributedSampler(dataset)
+# data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
+# model = accelerator.prepare(model)
+training_args = TrainingArguments(
     output_dir="results",
     num_train_epochs=20,
     logging_steps=10000,
@@ -131,20 +146,21 @@ args = TrainingArguments(
     weight_decay=0.01,
     logging_dir="logs",
     save_strategy="steps",
-    save_steps=5000,
+    save_steps=1001,
     gradient_accumulation_steps=8,
     gradient_checkpointing=True,
     optim="adafactor",
+    deepspeed="/scratch/project_2001403/poyhnent/configs/ds_config.json",
 )
 trainer = Trainer(
     model=model,
-    args=args,
+    args=training_args,
     train_dataset=dataset,
-    data_collator=data_collator,
+    # data_collator=data_collator,
     tokenizer=tokenizer,
+    # plugins="fsdp",
 )
-
 torch.cuda.empty_cache()
-trainer.train(resume_from_checkpoint=True)
+trainer.train()
 torch.cuda.empty_cache()
 trainer.save_model()
