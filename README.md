@@ -1,11 +1,17 @@
 # RPG-GPT: Leveling up game dialogue with creative NLG
 
-Code for the Master's thesis of **Teemu Pöyhönen** (2023), Master's Programme in
-Linguistic Diversity and Digital Humanities (Language Technology), Faculty of Arts,
-University of Helsinki. Supervisors: **Mika Hämäläinen** and **Khalid Alnajjar**.
+Can natural language generation write believable dialogue for non-player characters in role-playing games?
+RPG-GPT fine-tunes a dialogue model (GODEL) on ~850k context/response pairs unrolled from the dialogue trees of
+six classic RPGs, and evaluates the generated dialogue against real game dialogue with a computational-creativity
+framework and a user survey.
 
-- Published version (Helda): https://helda.helsinki.fi/items/5e2f7523-c61f-4315-814d-47b8a0e23d06
-- PDF: [`docs/Poyhonen_2023_RPG-GPT_MA_thesis.pdf`](docs/Poyhonen_2023_RPG-GPT_MA_thesis.pdf) (24 Apr 2023, 70 pp.)
+**Author:** Teemu Pöyhönen · **Paper:** [Helda (University of Helsinki repository)](https://helda.helsinki.fi/items/5e2f7523-c61f-4315-814d-47b8a0e23d06),
+PDF in [`docs/`](docs/Poyhonen_2023_RPG-GPT_MA_thesis.pdf)
+
+> Carried out as my Master's thesis (Linguistic Diversity and Digital Humanities, Language Technology,
+> University of Helsinki, 2023; supervisors Mika Hämäläinen and Khalid Alnajjar).
+> The code was revived in 2026 to run on Python 3.12 — see the run instructions below. Game dialogue data and
+> trained models are not included (copyrighted game text / size); see `data/README.md`.
 
 ## Summary
 
